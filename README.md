@@ -1,4 +1,3 @@
-cat > README.md << 'EOF'
 # Bússola PA 🧭
 
 Sistema web de gestão de passeios turísticos da cidade de Paulo Afonso, Bahia.
