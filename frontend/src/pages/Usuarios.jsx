@@ -1,11 +1,12 @@
 import { useEffect, useState } from 'react'
+import { Plus, X, UserCheck, UserX } from 'lucide-react'
 import api from '../api'
 
 const PERFIL_CORES = {
-  admin: { bg: '#e6eff8', cor: '#000441' },
-  guia: { bg: '#eaf3de', cor: '#3b6d11' },
-  parceiro: { bg: '#faeeda', cor: '#854f0b' },
-  cliente: { bg: '#f1efe8', cor: '#5f5e5a' },
+  admin: 'bg-blue-100 text-blue-800',
+  guia: 'bg-green-100 text-green-800',
+  parceiro: 'bg-orange-100 text-orange-800',
+  cliente: 'bg-gray-100 text-gray-700',
 }
 
 export default function Usuarios() {
@@ -28,7 +29,8 @@ export default function Usuarios() {
       setForm({ username: '', first_name: '', last_name: '', email: '', password: '', perfil: 'guia', telefone: '' })
       setMostrarForm(false)
       setSucesso('Usuário criado com sucesso.')
-    } catch (err) {
+      setTimeout(() => setSucesso(''), 3000)
+    } catch {
       setErro('Não foi possível criar o usuário.')
     }
   }
@@ -43,104 +45,155 @@ export default function Usuarios() {
   }
 
   return (
-    <div style={styles.container}>
-      <div style={styles.header}>
-        <h2 style={styles.titulo}>Gestão de Usuários</h2>
-        <button style={styles.botaoNovo} onClick={() => setMostrarForm(!mostrarForm)}>+ Novo Usuário</button>
+    <div className="p-8 max-w-5xl mx-auto">
+      {/* Header */}
+      <div className="flex items-center justify-between mb-6">
+        <div>
+          <h2 className="text-2xl font-bold" style={{ color: '#000441', fontFamily: 'Montserrat, sans-serif' }}>
+            Gestão de Usuários
+          </h2>
+          <p className="text-sm text-gray-500 mt-1">{usuarios.length} usuários cadastrados</p>
+        </div>
+        <button
+          onClick={() => setMostrarForm(!mostrarForm)}
+          className="flex items-center gap-2 px-4 py-2 rounded-lg text-white text-sm font-semibold transition-all active:scale-95 hover:opacity-90 cursor-pointer"
+          style={{ background: '#a53c00' }}
+        >
+          <Plus size={16} />
+          Novo Usuário
+        </button>
       </div>
 
-      {sucesso && <p style={styles.sucesso}>{sucesso}</p>}
-      {erro && <p style={styles.erro}>{erro}</p>}
+      {sucesso && <p className="text-sm text-green-700 bg-green-50 px-4 py-3 rounded-lg mb-4">{sucesso}</p>}
+      {erro && <p className="text-sm text-red-600 bg-red-50 px-4 py-3 rounded-lg mb-4">{erro}</p>}
 
+      {/* Formulário */}
       {mostrarForm && (
-        <div style={styles.formBox}>
-          <h3 style={styles.formTitulo}>Novo Usuário</h3>
+        <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-6 mb-6">
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="font-semibold text-base" style={{ color: '#000441' }}>Novo Usuário</h3>
+            <button onClick={() => setMostrarForm(false)} className="text-gray-400 hover:text-gray-600 cursor-pointer transition-colors">
+              <X size={18} />
+            </button>
+          </div>
           <form onSubmit={handleSubmit}>
-            <div style={styles.formGrid}>
-              <input style={styles.input} placeholder="Username" value={form.username} onChange={e => setForm({ ...form, username: e.target.value })} required />
-              <input style={styles.input} placeholder="Nome" value={form.first_name} onChange={e => setForm({ ...form, first_name: e.target.value })} />
-              <input style={styles.input} placeholder="Sobrenome" value={form.last_name} onChange={e => setForm({ ...form, last_name: e.target.value })} />
-              <input style={styles.input} placeholder="Email" type="email" value={form.email} onChange={e => setForm({ ...form, email: e.target.value })} />
-              <input style={styles.input} placeholder="Senha" type="password" value={form.password} onChange={e => setForm({ ...form, password: e.target.value })} required />
-              <input style={styles.input} placeholder="Telefone" value={form.telefone} onChange={e => setForm({ ...form, telefone: e.target.value })} />
-              <select style={styles.input} value={form.perfil} onChange={e => setForm({ ...form, perfil: e.target.value })}>
+            <div className="grid grid-cols-2 gap-4 mb-4">
+              {[
+                { label: 'Username', key: 'username', placeholder: 'nome.usuario' },
+                { label: 'Nome', key: 'first_name', placeholder: 'Primeiro nome' },
+                { label: 'Sobrenome', key: 'last_name', placeholder: 'Sobrenome' },
+                { label: 'Email', key: 'email', placeholder: 'email@exemplo.com', type: 'email' },
+                { label: 'Senha', key: 'password', placeholder: '••••••••', type: 'password' },
+                { label: 'Telefone', key: 'telefone', placeholder: '(75) 99999-9999' },
+              ].map(({ label, key, placeholder, type = 'text' }) => (
+                <div key={key}>
+                  <label className="block text-sm font-medium mb-1 text-gray-600">{label}</label>
+                  <input
+                    type={type}
+                    className="w-full px-4 py-3 border border-gray-200 rounded-lg text-sm outline-none focus:border-blue-400 transition-colors"
+                    placeholder={placeholder}
+                    value={form[key]}
+                    onChange={e => setForm({ ...form, [key]: e.target.value })}
+                    required={['username', 'password'].includes(key)}
+                  />
+                </div>
+              ))}
+            </div>
+            <div className="mb-4">
+              <label className="block text-sm font-medium mb-1 text-gray-600">Perfil</label>
+              <select
+                className="w-full px-4 py-3 border border-gray-200 rounded-lg text-sm outline-none cursor-pointer"
+                value={form.perfil}
+                onChange={e => setForm({ ...form, perfil: e.target.value })}
+              >
                 <option value="admin">Administrador</option>
                 <option value="guia">Guia de Turismo</option>
                 <option value="parceiro">Parceiro Operacional</option>
                 <option value="cliente">Cliente</option>
               </select>
             </div>
-            <div style={{ display: 'flex', gap: '8px', marginTop: '8px' }}>
-              <button style={styles.botaoSalvar} type="submit">Salvar</button>
-              <button style={styles.botaoCancelar} type="button" onClick={() => setMostrarForm(false)}>Cancelar</button>
+            <div className="flex gap-3">
+              <button
+                type="submit"
+                className="px-6 py-2 rounded-lg text-white text-sm font-semibold transition-all active:scale-95 hover:opacity-90 cursor-pointer"
+                style={{ background: '#a53c00' }}
+              >
+                Salvar
+              </button>
+              <button
+                type="button"
+                onClick={() => setMostrarForm(false)}
+                className="px-6 py-2 rounded-lg text-sm font-medium border border-gray-200 text-gray-600 hover:bg-gray-50 transition-all active:scale-95 cursor-pointer"
+              >
+                Cancelar
+              </button>
             </div>
           </form>
         </div>
       )}
 
-      <div style={styles.tabelaBox}>
-        <table style={styles.tabela}>
+      {/* Tabela */}
+      <div className="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden">
+        <table className="w-full">
           <thead>
-            <tr>
-              {['Nome', 'E-mail', 'Telefone', 'Perfil', 'Status', 'Ações'].map(h => (
-                <th key={h} style={styles.th}>{h}</th>
-              ))}
+            <tr className="bg-gray-50 text-xs font-semibold text-gray-500 uppercase tracking-wider">
+              <th className="px-6 py-3 text-left">Nome</th>
+              <th className="px-6 py-3 text-left">E-mail</th>
+              <th className="px-6 py-3 text-left">Telefone</th>
+              <th className="px-6 py-3 text-left">Perfil</th>
+              <th className="px-6 py-3 text-left">Status</th>
+              <th className="px-6 py-3 text-left">Ações</th>
             </tr>
           </thead>
-          <tbody>
+          <tbody className="divide-y divide-gray-50">
             {usuarios.map(u => (
-              <tr key={u.id} style={styles.tr}>
-                <td style={styles.td}>
-                  <strong>{u.first_name} {u.last_name}</strong>
-                  <br /><span style={{ color: '#767683', fontSize: '12px' }}>@{u.username}</span>
+              <tr key={u.id} className="hover:bg-gray-50 transition-colors">
+                <td className="px-6 py-4">
+                  <div className="flex items-center gap-3">
+                    <div className="w-8 h-8 rounded-full flex items-center justify-center text-white text-xs font-bold"
+                      style={{ background: '#000441' }}>
+                      {(u.first_name?.[0] || u.username[0]).toUpperCase()}
+                    </div>
+                    <div>
+                      <p className="text-sm font-medium text-gray-800">{u.first_name} {u.last_name}</p>
+                      <p className="text-xs text-gray-400">@{u.username}</p>
+                    </div>
+                  </div>
                 </td>
-                <td style={styles.td}>{u.email}</td>
-                <td style={styles.td}>{u.telefone || '—'}</td>
-                <td style={styles.td}>
-                  <span style={{ ...styles.badge, background: PERFIL_CORES[u.perfil]?.bg, color: PERFIL_CORES[u.perfil]?.cor }}>
+                <td className="px-6 py-4 text-sm text-gray-600">{u.email || '—'}</td>
+                <td className="px-6 py-4 text-sm text-gray-600">{u.telefone || '—'}</td>
+                <td className="px-6 py-4">
+                  <span className={`text-xs font-semibold px-3 py-1 rounded-full ${PERFIL_CORES[u.perfil]}`}>
                     {u.perfil}
                   </span>
                 </td>
-                <td style={styles.td}>
-                  <span style={{ color: u.status ? '#3b6d11' : '#a32d2d', fontWeight: '500', fontSize: '13px' }}>
-                    {u.status ? '● Ativo' : '● Inativo'}
+                <td className="px-6 py-4">
+                  <span className={`flex items-center gap-1 text-xs font-medium ${u.status ? 'text-green-600' : 'text-red-500'}`}>
+                    <span className={`w-2 h-2 rounded-full ${u.status ? 'bg-green-500' : 'bg-red-400'}`} />
+                    {u.status ? 'Ativo' : 'Inativo'}
                   </span>
                 </td>
-                <td style={styles.td}>
-                  <button style={styles.botaoAcao} onClick={() => toggleStatus(u.id, u.status)}>
-                    {u.status ? 'Desativar' : 'Ativar'}
+                <td className="px-6 py-4">
+                  <button
+                    onClick={() => toggleStatus(u.id, u.status)}
+                    className="flex items-center gap-1 text-xs font-medium px-3 py-1 rounded-lg border transition-all active:scale-95 cursor-pointer hover:opacity-80"
+                    style={{ borderColor: u.status ? '#fca5a5' : '#86efac', color: u.status ? '#dc2626' : '#16a34a' }}
+                  >
+                    {u.status ? <><UserX size={12} /> Desativar</> : <><UserCheck size={12} /> Ativar</>}
                   </button>
                 </td>
               </tr>
             ))}
             {usuarios.length === 0 && (
-              <tr><td colSpan={6} style={{ textAlign: 'center', padding: '2rem', color: '#767683' }}>Nenhum usuário encontrado.</td></tr>
+              <tr>
+                <td colSpan={6} className="px-6 py-10 text-center text-sm text-gray-400">
+                  Nenhum usuário encontrado.
+                </td>
+              </tr>
             )}
           </tbody>
         </table>
       </div>
     </div>
   )
-}
-
-const styles = {
-  container: { padding: '2rem', maxWidth: '1100px', margin: '0 auto' },
-  header: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' },
-  titulo: { color: '#000441', fontFamily: 'Montserrat, sans-serif', fontSize: '22px' },
-  botaoNovo: { background: '#a53c00', color: '#fff', border: 'none', padding: '8px 16px', borderRadius: '6px', cursor: 'pointer', fontSize: '14px' },
-  sucesso: { color: '#3b6d11', background: '#eaf3de', padding: '10px', borderRadius: '6px', marginBottom: '1rem' },
-  erro: { color: '#a32d2d', background: '#fcebeb', padding: '10px', borderRadius: '6px', marginBottom: '1rem' },
-  formBox: { background: '#fff', border: '1px solid #e0e9f2', borderRadius: '8px', padding: '1.5rem', marginBottom: '1.5rem' },
-  formTitulo: { color: '#000441', marginBottom: '1rem', fontSize: '16px' },
-  formGrid: { display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' },
-  input: { width: '100%', padding: '10px', border: '1px solid #c6c5d4', borderRadius: '4px', fontSize: '14px', boxSizing: 'border-box' },
-  botaoSalvar: { background: '#a53c00', color: '#fff', border: 'none', padding: '8px 20px', borderRadius: '4px', cursor: 'pointer', fontSize: '14px' },
-  botaoCancelar: { background: '#fff', color: '#454652', border: '1px solid #c6c5d4', padding: '8px 20px', borderRadius: '4px', cursor: 'pointer', fontSize: '14px' },
-  tabelaBox: { background: '#fff', border: '1px solid #e0e9f2', borderRadius: '10px', overflow: 'hidden' },
-  tabela: { width: '100%', borderCollapse: 'collapse' },
-  th: { background: '#f6faff', color: '#000441', padding: '10px 14px', textAlign: 'left', fontSize: '13px', fontWeight: '600', borderBottom: '1px solid #e0e9f2' },
-  tr: { borderBottom: '1px solid #f0f4f8' },
-  td: { padding: '12px 14px', fontSize: '14px', color: '#141d23' },
-  badge: { padding: '3px 10px', borderRadius: '999px', fontSize: '11px', fontWeight: '600' },
-  botaoAcao: { background: 'transparent', color: '#000441', border: '1px solid #c6c5d4', padding: '4px 12px', borderRadius: '4px', cursor: 'pointer', fontSize: '12px' },
 }

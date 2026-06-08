@@ -1,101 +1,112 @@
 import { useEffect, useState } from 'react'
+import { CalendarCheck, Users, AlertTriangle, DollarSign, TrendingUp } from 'lucide-react'
 import api from '../api'
 
 const STATUS_CORES = {
-  solicitada: { bg: '#e6eff8', cor: '#000441' },
-  confirmada: { bg: '#eaf3de', cor: '#3b6d11' },
-  em_andamento: { bg: '#faeeda', cor: '#854f0b' },
-  concluida: { bg: '#e1f5ee', cor: '#0f6e56' },
-  cancelada: { bg: '#fcebeb', cor: '#a32d2d' },
+  solicitada: 'bg-blue-100 text-blue-800',
+  confirmada: 'bg-green-100 text-green-800',
+  em_andamento: 'bg-orange-100 text-orange-800',
+  concluida: 'bg-teal-100 text-teal-800',
+  cancelada: 'bg-red-100 text-red-800',
 }
 
 export default function Dashboard() {
   const [reservas, setReservas] = useState([])
-  const [metricas, setMetricas] = useState({ ativas: 0, guias: 0, ocorrencias: 0, receita: 0 })
+  const [metricas, setMetricas] = useState({ ativas: 0, concluidas: 0, ocorrencias: 0, receita: 0 })
 
   useEffect(() => {
     api.get('/reservas/').then(res => {
       const todas = res.data
       setReservas(todas.slice(0, 5))
       const ativas = todas.filter(r => ['solicitada', 'confirmada', 'em_andamento'].includes(r.status)).length
-      setMetricas(m => ({ ...m, ativas }))
+      const concluidas = todas.filter(r => r.status === 'concluida').length
+      setMetricas(m => ({ ...m, ativas, concluidas }))
+    })
+    api.get('/ocorrencias/').then(res => {
+      const abertas = res.data.filter(o => o.status === 'aberta').length
+      setMetricas(m => ({ ...m, ocorrencias: abertas }))
     })
   }, [])
 
-  return (
-    <div style={styles.container}>
-      <h2 style={styles.titulo}>Painel de Controle</h2>
-      <p style={styles.subtitulo}>Visão consolidada para administração central - Paulo Afonso, Bahia.</p>
+  const cards = [
+    { label: 'Reservas Ativas', valor: metricas.ativas, icone: CalendarCheck, cor: 'text-blue-600', bg: 'bg-blue-50' },
+    { label: 'Concluídas', valor: metricas.concluidas, icone: TrendingUp, cor: 'text-green-600', bg: 'bg-green-50' },
+    { label: 'Ocorrências Abertas', valor: metricas.ocorrencias, icone: AlertTriangle, cor: 'text-red-600', bg: 'bg-red-50', destaque: metricas.ocorrencias > 0 },
+    { label: 'Receita do Dia', valor: '—', icone: DollarSign, cor: 'text-teal-600', bg: 'bg-teal-50' },
+  ]
 
-      <div style={styles.cards}>
-        <div style={styles.card}>
-          <span style={styles.cardLabel}>Reservas Ativas</span>
-          <span style={styles.cardValor}>{metricas.ativas}</span>
-        </div>
-        <div style={styles.card}>
-          <span style={styles.cardLabel}>Guias em Campo</span>
-          <span style={styles.cardValor}>—</span>
-        </div>
-        <div style={{ ...styles.card, border: '1.5px solid #a53c00' }}>
-          <span style={styles.cardLabel}>Ocorrências Abertas</span>
-          <span style={{ ...styles.cardValor, color: '#a53c00' }}>—</span>
-        </div>
-        <div style={styles.card}>
-          <span style={styles.cardLabel}>Receita do Dia</span>
-          <span style={styles.cardValor}>—</span>
-        </div>
+  return (
+    <div className="p-8 max-w-6xl mx-auto">
+      <h2 className="text-2xl font-bold mb-1" style={{ color: '#000441', fontFamily: 'Montserrat, sans-serif' }}>
+        Painel de Controle
+      </h2>
+      <p className="text-sm text-gray-500 mb-8">Visão consolidada para administração central - Paulo Afonso, Bahia.</p>
+
+      {/* Cards */}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+        {cards.map(({ label, valor, icone: Icone, cor, bg, destaque }) => (
+          <div
+            key={label}
+            className={`bg-white rounded-xl p-5 border ${destaque ? 'border-red-400' : 'border-gray-100'} shadow-sm`}
+          >
+            <div className="flex items-center justify-between mb-3">
+              <div className={`w-10 h-10 rounded-lg ${bg} flex items-center justify-center`}>
+                <Icone size={18} className={cor} />
+              </div>
+              {destaque && (
+                <span className="text-xs font-bold text-red-600 bg-red-100 px-2 py-0.5 rounded-full">CRÍTICO</span>
+              )}
+            </div>
+            <p className="text-xs text-gray-500 mb-1">{label}</p>
+            <p className="text-3xl font-bold" style={{ color: '#000441', fontFamily: 'Montserrat, sans-serif' }}>
+              {valor}
+            </p>
+          </div>
+        ))}
       </div>
 
-      <div style={styles.tabelaBox}>
-        <div style={styles.tabelaHeader}>
-          <h3 style={styles.tabelaTitulo}>Últimas Solicitações de Reservas</h3>
+      {/* Tabela */}
+      <div className="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden">
+        <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100">
+          <h3 className="font-semibold text-base" style={{ color: '#000441' }}>Últimas Solicitações de Reservas</h3>
+          <a href="/reservas" className="text-sm font-medium px-4 py-2 rounded-lg text-white" style={{ background: '#a53c00' }}>
+            Ver Todas
+          </a>
         </div>
-        <table style={styles.tabela}>
+        <table className="w-full">
           <thead>
-            <tr>
-              {['ID', 'Cliente', 'Passeio', 'Guia Responsável', 'Status'].map(h => (
-                <th key={h} style={styles.th}>{h}</th>
-              ))}
+            <tr className="bg-gray-50 text-xs font-semibold text-gray-500 uppercase tracking-wider">
+              <th className="px-6 py-3 text-left">ID</th>
+              <th className="px-6 py-3 text-left">Cliente</th>
+              <th className="px-6 py-3 text-left">Passeio</th>
+              <th className="px-6 py-3 text-left">Guia</th>
+              <th className="px-6 py-3 text-left">Status</th>
             </tr>
           </thead>
-          <tbody>
+          <tbody className="divide-y divide-gray-50">
             {reservas.map(r => (
-              <tr key={r.id} style={styles.tr}>
-                <td style={styles.td}><strong>#BPA-{r.id}</strong></td>
-                <td style={styles.td}>{r.cliente}</td>
-                <td style={styles.td}>{r.passeio}</td>
-                <td style={styles.td}>{r.guia_responsavel}</td>
-                <td style={styles.td}>
-                  <span style={{ ...styles.badge, background: STATUS_CORES[r.status]?.bg, color: STATUS_CORES[r.status]?.cor }}>
+              <tr key={r.id} className="hover:bg-gray-50 transition-colors">
+                <td className="px-6 py-4 text-sm font-bold" style={{ color: '#000441' }}>#BPA-{r.id}</td>
+                <td className="px-6 py-4 text-sm text-gray-700">{r.cliente_nome || r.cliente}</td>
+                <td className="px-6 py-4 text-sm text-gray-700">{r.passeio_nome || r.passeio}</td>
+                <td className="px-6 py-4 text-sm text-gray-700">{r.guia_nome || r.guia_responsavel}</td>
+                <td className="px-6 py-4">
+                  <span className={`text-xs font-semibold px-3 py-1 rounded-full ${STATUS_CORES[r.status]}`}>
                     {r.status.replace('_', ' ').toUpperCase()}
                   </span>
                 </td>
               </tr>
             ))}
             {reservas.length === 0 && (
-              <tr><td colSpan={5} style={{ textAlign: 'center', padding: '2rem', color: '#767683' }}>Nenhuma reserva cadastrada.</td></tr>
+              <tr>
+                <td colSpan={5} className="px-6 py-10 text-center text-sm text-gray-400">
+                  Nenhuma reserva cadastrada.
+                </td>
+              </tr>
             )}
           </tbody>
         </table>
       </div>
     </div>
   )
-}
-
-const styles = {
-  container: { padding: '2rem', maxWidth: '1200px', margin: '0 auto' },
-  titulo: { color: '#000441', fontFamily: 'Montserrat, sans-serif', fontSize: '24px', marginBottom: '4px' },
-  subtitulo: { color: '#454652', fontSize: '14px', marginBottom: '2rem' },
-  cards: { display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '1rem', marginBottom: '2rem' },
-  card: { background: '#fff', border: '1px solid #e0e9f2', borderRadius: '10px', padding: '1.25rem', display: 'flex', flexDirection: 'column', gap: '8px' },
-  cardLabel: { color: '#454652', fontSize: '13px' },
-  cardValor: { color: '#000441', fontSize: '28px', fontWeight: '700', fontFamily: 'Montserrat, sans-serif' },
-  tabelaBox: { background: '#fff', border: '1px solid #e0e9f2', borderRadius: '10px', padding: '1.5rem' },
-  tabelaHeader: { marginBottom: '1rem' },
-  tabelaTitulo: { color: '#000441', fontSize: '16px', fontWeight: '600' },
-  tabela: { width: '100%', borderCollapse: 'collapse' },
-  th: { background: '#f6faff', color: '#000441', padding: '10px 14px', textAlign: 'left', fontSize: '13px', fontWeight: '600', borderBottom: '1px solid #e0e9f2' },
-  tr: { borderBottom: '1px solid #f0f4f8' },
-  td: { padding: '12px 14px', fontSize: '14px', color: '#141d23' },
-  badge: { padding: '3px 10px', borderRadius: '999px', fontSize: '11px', fontWeight: '600' },
 }

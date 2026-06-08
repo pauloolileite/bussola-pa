@@ -1,10 +1,11 @@
 import { useEffect, useState } from 'react'
+import { DollarSign, TrendingUp, Clock, Download } from 'lucide-react'
 import api from '../api'
 
 const STATUS_CORES = {
-  pendente: { bg: '#faeeda', cor: '#854f0b' },
-  pago: { bg: '#eaf3de', cor: '#3b6d11' },
-  cancelado: { bg: '#fcebeb', cor: '#a32d2d' },
+  pendente: 'bg-orange-100 text-orange-800',
+  pago: 'bg-green-100 text-green-800',
+  cancelado: 'bg-red-100 text-red-800',
 }
 
 export default function Financeiro() {
@@ -22,74 +23,83 @@ export default function Financeiro() {
     })
   }, [])
 
-  return (
-    <div style={styles.container}>
-      <h2 style={styles.titulo}>Meu Financeiro</h2>
+  const cards = [
+    { label: 'Total em Passeios', valor: `R$ ${totais.total.toFixed(2)}`, icone: DollarSign, cor: 'text-blue-600', bg: 'bg-blue-50' },
+    { label: 'Sua Comissão', valor: `R$ ${totais.guia.toFixed(2)}`, icone: TrendingUp, cor: 'text-green-600', bg: 'bg-green-50' },
+    { label: 'Pagamentos Pendentes', valor: totais.pendente, icone: Clock, cor: 'text-orange-600', bg: 'bg-orange-50' },
+  ]
 
-      <div style={styles.cards}>
-        <div style={styles.card}>
-          <span style={styles.cardLabel}>Total em Passeios</span>
-          <span style={styles.cardValor}>R$ {totais.total.toFixed(2)}</span>
-        </div>
-        <div style={styles.card}>
-          <span style={styles.cardLabel}>Sua Comissão</span>
-          <span style={styles.cardValor}>R$ {totais.guia.toFixed(2)}</span>
-        </div>
-        <div style={styles.card}>
-          <span style={styles.cardLabel}>Pagamentos Pendentes</span>
-          <span style={{ ...styles.cardValor, color: '#854f0b' }}>{totais.pendente}</span>
-        </div>
+  return (
+    <div className="p-8 max-w-5xl mx-auto">
+      <h2 className="text-2xl font-bold mb-1" style={{ color: '#000441', fontFamily: 'Montserrat, sans-serif' }}>
+        Meu Financeiro
+      </h2>
+      <p className="text-sm text-gray-500 mb-8">Acompanhe seus ganhos e comissões</p>
+
+      {/* Cards */}
+      <div className="grid grid-cols-3 gap-4 mb-8">
+        {cards.map(({ label, valor, icone: Icone, cor, bg }) => (
+          <div key={label} className="bg-white rounded-xl border border-gray-100 shadow-sm p-5">
+            <div className={`w-10 h-10 rounded-lg ${bg} flex items-center justify-center mb-3`}>
+              <Icone size={18} className={cor} />
+            </div>
+            <p className="text-xs text-gray-500 mb-1">{label}</p>
+            <p className="text-2xl font-bold" style={{ color: '#000441', fontFamily: 'Montserrat, sans-serif' }}>
+              {valor}
+            </p>
+          </div>
+        ))}
       </div>
 
-      <div style={styles.tabelaBox}>
-        <h3 style={styles.tabelaTitulo}>Histórico de Ganhos</h3>
-        <table style={styles.tabela}>
+      {/* Tabela */}
+      <div className="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden">
+        <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100">
+          <h3 className="font-semibold text-base" style={{ color: '#000441' }}>Histórico de Ganhos</h3>
+          <button className="flex items-center gap-2 text-sm text-gray-500 hover:text-gray-700 transition-colors cursor-pointer active:scale-95">
+            <Download size={14} />
+            Exportar
+          </button>
+        </div>
+        <table className="w-full">
           <thead>
-            <tr>
-              {['Reserva', 'Total do Passeio', 'Sua Comissão', 'Status', 'Ação'].map(h => (
-                <th key={h} style={styles.th}>{h}</th>
-              ))}
+            <tr className="bg-gray-50 text-xs font-semibold text-gray-500 uppercase tracking-wider">
+              <th className="px-6 py-3 text-left">Reserva</th>
+              <th className="px-6 py-3 text-left">Total do Passeio</th>
+              <th className="px-6 py-3 text-left">Sua Comissão</th>
+              <th className="px-6 py-3 text-left">Status</th>
+              <th className="px-6 py-3 text-left">Ação</th>
             </tr>
           </thead>
-          <tbody>
+          <tbody className="divide-y divide-gray-50">
             {registros.map(f => (
-              <tr key={f.id} style={styles.tr}>
-                <td style={styles.td}><strong>#TR-{f.reserva}</strong></td>
-                <td style={styles.td}>R$ {parseFloat(f.valor_total).toFixed(2)}</td>
-                <td style={styles.td}><strong>R$ {parseFloat(f.valor_guia).toFixed(2)}</strong></td>
-                <td style={styles.td}>
-                  <span style={{ ...styles.badge, background: STATUS_CORES[f.status_pagamento]?.bg, color: STATUS_CORES[f.status_pagamento]?.cor }}>
+              <tr key={f.id} className="hover:bg-gray-50 transition-colors">
+                <td className="px-6 py-4 text-sm font-bold" style={{ color: '#000441' }}>#TR-{f.reserva}</td>
+                <td className="px-6 py-4 text-sm text-gray-700">R$ {parseFloat(f.valor_total).toFixed(2)}</td>
+                <td className="px-6 py-4 text-sm font-semibold" style={{ color: '#000441' }}>
+                  R$ {parseFloat(f.valor_guia).toFixed(2)}
+                </td>
+                <td className="px-6 py-4">
+                  <span className={`text-xs font-semibold px-3 py-1 rounded-full ${STATUS_CORES[f.status_pagamento]}`}>
                     {f.status_pagamento.toUpperCase()}
                   </span>
                 </td>
-                <td style={styles.td}>
-                  <span style={styles.link}>Ver Recibo</span>
+                <td className="px-6 py-4">
+                  <button className="text-xs font-medium underline cursor-pointer hover:opacity-70 transition-opacity" style={{ color: '#000441' }}>
+                    Ver Recibo
+                  </button>
                 </td>
               </tr>
             ))}
             {registros.length === 0 && (
-              <tr><td colSpan={5} style={{ textAlign: 'center', padding: '2rem', color: '#767683' }}>Nenhum registro financeiro.</td></tr>
+              <tr>
+                <td colSpan={5} className="px-6 py-10 text-center text-sm text-gray-400">
+                  Nenhum registro financeiro.
+                </td>
+              </tr>
             )}
           </tbody>
         </table>
       </div>
     </div>
   )
-}
-
-const styles = {
-  container: { padding: '2rem', maxWidth: '1000px', margin: '0 auto' },
-  titulo: { color: '#000441', fontFamily: 'Montserrat, sans-serif', fontSize: '22px', marginBottom: '1.5rem' },
-  cards: { display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '1rem', marginBottom: '2rem' },
-  card: { background: '#fff', border: '1px solid #e0e9f2', borderRadius: '10px', padding: '1.25rem', display: 'flex', flexDirection: 'column', gap: '8px' },
-  cardLabel: { color: '#454652', fontSize: '13px' },
-  cardValor: { color: '#000441', fontSize: '26px', fontWeight: '700', fontFamily: 'Montserrat, sans-serif' },
-  tabelaBox: { background: '#fff', border: '1px solid #e0e9f2', borderRadius: '10px', padding: '1.5rem' },
-  tabelaTitulo: { color: '#000441', fontSize: '16px', fontWeight: '600', marginBottom: '1rem' },
-  tabela: { width: '100%', borderCollapse: 'collapse' },
-  th: { background: '#f6faff', color: '#000441', padding: '10px 14px', textAlign: 'left', fontSize: '13px', fontWeight: '600', borderBottom: '1px solid #e0e9f2' },
-  tr: { borderBottom: '1px solid #f0f4f8' },
-  td: { padding: '12px 14px', fontSize: '14px', color: '#141d23' },
-  badge: { padding: '3px 10px', borderRadius: '999px', fontSize: '11px', fontWeight: '600' },
-  link: { color: '#000441', cursor: 'pointer', fontWeight: '500', fontSize: '13px', textDecoration: 'underline' },
 }
