@@ -1,0 +1,14 @@
+@import "tailwindcss";
+
+@import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&family=Inter:wght@400;500;600&display=swap');
+
+:root {
+  --azul: #000441;
+  --laranja: #a53c00;
+  --laranja-hover: #8a3100;
+}
+
+body {
+  font-family: 'Inter', sans-serif;
+  background: #f6faff;
+}
