@@ -23,8 +23,13 @@ export default function Login() {
       localStorage.setItem('access', res.data.access)
       localStorage.setItem('refresh', res.data.refresh)
       navigate('/dashboard')
-    } catch {
-      setErro('Usuário ou senha inválidos.')
+    } catch (err) {
+      const msg = err.response?.data
+      if (msg && JSON.stringify(msg).toLowerCase().includes('inativo')) {
+        setErro('Usuário inativo. Contate o administrador.')
+      } else {
+        setErro('Usuário ou senha inválidos.')
+      }
     } finally {
       setLoading(false)
     }

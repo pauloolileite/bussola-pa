@@ -1,5 +1,6 @@
 from django.contrib.auth.models import AbstractUser
 from django.db import models
+from django.utils import timezone
 
 class Usuario(AbstractUser):
     PERFIL_CHOICES = [
@@ -11,9 +12,21 @@ class Usuario(AbstractUser):
     perfil = models.CharField(max_length=20, choices=PERFIL_CHOICES, default='cliente')
     telefone = models.CharField(max_length=20, blank=True)
     status = models.BooleanField(default=True)
+    desativado_em = models.DateTimeField(null=True, blank=True)
+
+    def desativar(self):
+        self.status = False
+        self.desativado_em = timezone.now()
+        self.save()
+
+    def ativar(self):
+        self.status = True
+        self.desativado_em = None
+        self.save()
 
     def __str__(self):
         return f'{self.get_full_name()} ({self.perfil})'
+
 
 class Cliente(models.Model):
     nome = models.CharField(max_length=200)

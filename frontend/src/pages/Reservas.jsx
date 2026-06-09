@@ -78,7 +78,7 @@ export default function Reservas() {
     carregarReservas()
     api.get('/clientes/').then(res => setClientes(res.data))
     api.get('/passeios/').then(res => setPasseios(res.data))
-    api.get('/usuarios/').then(res => setGuias(res.data.filter(u => ['guia', 'admin'].includes(u.perfil))))
+    api.get('/usuarios/').then(res => setGuias(res.data))
   }, [])
 
   function carregarReservas() {
