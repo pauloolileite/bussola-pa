@@ -11,7 +11,6 @@ const MENUS = {
     { path: '/usuarios', label: 'Usuários', icone: Users },
     { path: '/passeios', label: 'Passeios', icone: Compass },
     { path: '/reservas', label: 'Reservas', icone: CalendarCheck },
-    { path: '/pontos-turisticos', label: 'Pontos Turísticos', icone: MapPin },
     { path: '/ocorrencias', label: 'Ocorrências', icone: AlertTriangle },
     { path: '/financeiro', label: 'Financeiro', icone: DollarSign },
     { path: '/relatorios', label: 'Relatórios', icone: BarChart2 },

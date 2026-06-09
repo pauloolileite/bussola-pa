@@ -9,6 +9,7 @@ import Usuarios from './pages/Usuarios'
 import Validacao from './pages/Validacao'
 import Sidebar from './components/Sidebar'
 import NovaReserva from './pages/NovaReserva'
+import PontosTuristicos from './pages/PontosTuristicos'
 
 function RotaProtegida({ children }) {
   const token = localStorage.getItem('access')
@@ -32,9 +33,8 @@ export default function App() {
           <Route path="/financeiro" element={<RotaProtegida><Financeiro /></RotaProtegida>} />
           <Route path="/usuarios" element={<RotaProtegida><Usuarios /></RotaProtegida>} />
           <Route path="/validacao" element={<RotaProtegida><Validacao /></RotaProtegida>} />
-          <Route path="/reservas/nova" element={<RotaProtegida><NovaReserva /></RotaProtegida>} />
           <Route path="*" element={<Navigate to="/dashboard" />} />
-          
+          <Route path="/pontos-turisticos" element={<RotaProtegida><PontosTuristicos /></RotaProtegida>} />
         </Routes>
       </main>
     </div>
