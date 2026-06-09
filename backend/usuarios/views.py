@@ -1,16 +1,10 @@
-from rest_framework import viewsets, permissions
+from rest_framework import viewsets
 from rest_framework.decorators import action
 from rest_framework.response import Response
+from core.permissions import IsAdmin, IsAdminOrGuia
 from .models import Usuario, Cliente
 from .serializers import UsuarioSerializer, UsuarioCriacaoSerializer, ClienteSerializer
 
-class IsAdmin(permissions.BasePermission):
-    def has_permission(self, request, view):
-        return request.user.is_authenticated and request.user.perfil == 'admin'
-
-class IsAdminOrGuia(permissions.BasePermission):
-    def has_permission(self, request, view):
-        return request.user.is_authenticated and request.user.perfil in ['admin', 'guia']
 
 class UsuarioViewSet(viewsets.ModelViewSet):
     queryset = Usuario.objects.all()
@@ -38,6 +32,7 @@ class UsuarioViewSet(viewsets.ModelViewSet):
         from django.core.management import call_command
         call_command('limpar_usuarios')
         return Response({'mensagem': 'Limpeza executada com sucesso.'})
+
 
 class ClienteViewSet(viewsets.ModelViewSet):
     queryset = Cliente.objects.all()

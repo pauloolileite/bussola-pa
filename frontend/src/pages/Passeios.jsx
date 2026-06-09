@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { Compass, Filter, Plus, X, MapPin } from 'lucide-react'
+import { useAuth } from '../hooks/useAuth'
 import api from '../api'
 
 const CATEGORIA_LABELS = {
@@ -16,15 +17,6 @@ const CATEGORIA_CORES = {
   voadeira: 'bg-teal-100 text-teal-800',
   ecoturismo: 'bg-green-100 text-green-800',
   aventura: 'bg-orange-100 text-orange-800',
-}
-
-function getPerfil() {
-  try {
-    const token = localStorage.getItem('access')
-    if (!token) return 'cliente'
-    const payload = JSON.parse(atob(token.split('.')[1]))
-    return payload.perfil || 'cliente'
-  } catch { return 'cliente' }
 }
 
 function Modal({ titulo, onClose, children }) {
@@ -44,6 +36,7 @@ function Modal({ titulo, onClose, children }) {
 }
 
 export default function Passeios() {
+  const { isAdmin } = useAuth()
   const [aba, setAba] = useState('passeios')
   const [passeios, setPasseios] = useState([])
   const [pontos, setPontos] = useState([])
@@ -54,7 +47,6 @@ export default function Passeios() {
   const [formPonto, setFormPonto] = useState({ nome: '', descricao: '', localizacao: '' })
   const [erro, setErro] = useState('')
   const [sucesso, setSucesso] = useState('')
-  const perfil = getPerfil()
 
   useEffect(() => { carregarDados() }, [categoria])
 
@@ -104,7 +96,6 @@ export default function Passeios() {
 
   return (
     <div className="p-8 max-w-6xl mx-auto">
-      {/* Header */}
       <div className="flex items-center justify-between mb-6">
         <div>
           <h2 className="text-2xl font-bold" style={{ color: '#000441', fontFamily: 'Montserrat, sans-serif' }}>
@@ -123,7 +114,7 @@ export default function Passeios() {
               </select>
             </div>
           )}
-          {perfil === 'admin' && (
+          {isAdmin && (
             <button
               onClick={() => aba === 'passeios' ? setModalPasseio(true) : setModalPonto(true)}
               className="flex items-center gap-2 px-4 py-2 rounded-lg text-white text-sm font-semibold transition-all active:scale-95 hover:opacity-90 cursor-pointer"
@@ -139,28 +130,19 @@ export default function Passeios() {
       {sucesso && <p className="text-sm text-green-700 bg-green-50 px-4 py-3 rounded-lg mb-4">{sucesso}</p>}
       {erro && <p className="text-sm text-red-600 bg-red-50 px-4 py-3 rounded-lg mb-4">{erro}</p>}
 
-      {/* Abas */}
       <div className="flex border-b border-gray-200 mb-6">
         {[
           { key: 'passeios', label: 'Passeios', icone: Compass },
           { key: 'pontos', label: 'Pontos Turísticos', icone: MapPin },
         ].map(({ key, label, icone: Icone }) => (
-          <button
-            key={key}
-            onClick={() => setAba(key)}
+          <button key={key} onClick={() => setAba(key)}
             className="flex items-center gap-2 px-5 py-3 text-sm font-medium border-b-2 transition-colors cursor-pointer"
-            style={{
-              borderColor: aba === key ? '#a53c00' : 'transparent',
-              color: aba === key ? '#a53c00' : '#9ca3af',
-            }}
-          >
-            <Icone size={15} />
-            {label}
+            style={{ borderColor: aba === key ? '#a53c00' : 'transparent', color: aba === key ? '#a53c00' : '#9ca3af' }}>
+            <Icone size={15} />{label}
           </button>
         ))}
       </div>
 
-      {/* Aba Passeios */}
       {aba === 'passeios' && (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
           {passeios.map(p => (
@@ -195,7 +177,6 @@ export default function Passeios() {
         </div>
       )}
 
-      {/* Aba Pontos Turísticos */}
       {aba === 'pontos' && (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
           {pontos.map(p => (
@@ -212,12 +193,10 @@ export default function Passeios() {
                 </div>
                 {p.descricao && <p className="text-sm text-gray-500 line-clamp-2 mb-2">{p.descricao}</p>}
                 {p.localizacao && <p className="text-xs text-gray-400 mb-3">📍 {p.localizacao}</p>}
-                {perfil === 'admin' && (
-                  <button
-                    onClick={() => togglePonto(p.id, p.status)}
+                {isAdmin && (
+                  <button onClick={() => togglePonto(p.id, p.status)}
                     className="w-full py-2 rounded-lg text-sm font-medium border transition-all active:scale-95 cursor-pointer hover:opacity-80"
-                    style={{ borderColor: p.status ? '#fca5a5' : '#86efac', color: p.status ? '#dc2626' : '#16a34a' }}
-                  >
+                    style={{ borderColor: p.status ? '#fca5a5' : '#86efac', color: p.status ? '#dc2626' : '#16a34a' }}>
                     {p.status ? 'Desativar' : 'Ativar'}
                   </button>
                 )}
@@ -233,7 +212,6 @@ export default function Passeios() {
         </div>
       )}
 
-      {/* Modal Passeio */}
       {modalPasseio && (
         <Modal titulo="Novo Passeio" onClose={() => { setModalPasseio(false); setErro('') }}>
           <form onSubmit={salvarPasseio} className="space-y-4">
@@ -292,7 +270,6 @@ export default function Passeios() {
         </Modal>
       )}
 
-      {/* Modal Ponto */}
       {modalPonto && (
         <Modal titulo="Novo Ponto Turístico" onClose={() => { setModalPonto(false); setErro('') }}>
           <form onSubmit={salvarPonto} className="space-y-4">

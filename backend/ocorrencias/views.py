@@ -1,14 +1,12 @@
-from rest_framework import viewsets, permissions
+from rest_framework import viewsets
+from core.permissions import IsAdminOrGuia
 from .models import Ocorrencia
 from .serializers import OcorrenciaSerializer
 
-class IsGuiaOrAdmin(permissions.BasePermission):
-    def has_permission(self, request, view):
-        return request.user.is_authenticated and request.user.perfil in ['admin', 'guia']
 
 class OcorrenciaViewSet(viewsets.ModelViewSet):
     serializer_class = OcorrenciaSerializer
-    permission_classes = [IsGuiaOrAdmin]
+    permission_classes = [IsAdminOrGuia]
 
     def get_queryset(self):
         user = self.request.user

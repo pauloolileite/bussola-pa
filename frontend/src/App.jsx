@@ -8,7 +8,6 @@ import Financeiro from './pages/Financeiro'
 import Usuarios from './pages/Usuarios'
 import Validacao from './pages/Validacao'
 import Sidebar from './components/Sidebar'
-import NovaReserva from './pages/NovaReserva'
 import PontosTuristicos from './pages/PontosTuristicos'
 
 function RotaProtegida({ children }) {

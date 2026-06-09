@@ -1,23 +1,14 @@
-from rest_framework import viewsets, permissions, status
+from rest_framework import viewsets, status
 from rest_framework.decorators import action
 from rest_framework.response import Response
+from core.permissions import IsAdminOrGuia, IsAdminOrParceiro
 from .models import Reserva, ReservaHistorico
 from .serializers import ReservaSerializer, AtualizarStatusSerializer, ReservaHistoricoSerializer
 
 
-class IsGuiaOrAdmin(permissions.BasePermission):
-    def has_permission(self, request, view):
-        return request.user.is_authenticated and request.user.perfil in ['admin', 'guia']
-
-
-class IsParceiroOrAdmin(permissions.BasePermission):
-    def has_permission(self, request, view):
-        return request.user.is_authenticated and request.user.perfil in ['admin', 'parceiro']
-
-
 class ReservaViewSet(viewsets.ModelViewSet):
     serializer_class = ReservaSerializer
-    permission_classes = [IsGuiaOrAdmin]
+    permission_classes = [IsAdminOrGuia]
 
     def get_queryset(self):
         user = self.request.user
@@ -27,7 +18,7 @@ class ReservaViewSet(viewsets.ModelViewSet):
 
     def get_permissions(self):
         if self.action in ['buscar_por_qr', 'validar_qr']:
-            return [IsParceiroOrAdmin()]
+            return [IsAdminOrParceiro()]
         return super().get_permissions()
 
     @action(detail=True, methods=['patch'], url_path='status')
@@ -64,11 +55,17 @@ class ReservaViewSet(viewsets.ModelViewSet):
             reserva = Reserva.objects.get(codigo_qr=codigo)
         except Reserva.DoesNotExist:
             return Response({'erro': 'Reserva não encontrada.'}, status=status.HTTP_404_NOT_FOUND)
+
         if reserva.status not in ['solicitada', 'confirmada']:
-            return Response({'erro': 'Reserva não está apta para validação.'}, status=status.HTTP_400_BAD_REQUEST)
+            return Response(
+                {'erro': 'Reserva não está apta para validação.'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
         status_anterior = reserva.status
         reserva.status = 'em_andamento'
         reserva.save()
+
         ReservaHistorico.objects.create(
             reserva=reserva,
             status_anterior=status_anterior,
