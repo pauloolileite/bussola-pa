@@ -46,6 +46,7 @@ INSTALLED_APPS = [
     'usuarios',
     'passeios',
     'reservas',
+    'ia',
     'ocorrencias',
     'financeiro',
 ]
@@ -102,8 +103,8 @@ DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql',
         'NAME': 'bussola_pa',
-        'USER': 'postgres',
-        'PASSWORD': '728568',
+        'USER': 'bussola_user',
+        'PASSWORD': '12345',
         'HOST': 'localhost',
         'PORT': '5432',
     }
