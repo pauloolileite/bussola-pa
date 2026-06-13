@@ -1,0 +1,104 @@
+@import "tailwindcss";
+
+@import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&family=Inter:wght@400;500;600&display=swap');
+
+:root {
+  --azul: #000441;
+  --laranja: #a53c00;
+  --laranja-hover: #8a3100;
+}
+
+body {
+  font-family: 'Inter', sans-serif;
+  background: #f6faff;
+}
+/* ── Responsividade global ── */
+
+/* Desktop: conteúdo ao lado da sidebar */
+@media (min-width: 1024px) {
+  .main-com-sidebar {
+    margin-left: 224px;
+  }
+}
+
+/* Mobile: espaço para a topbar hamburguer */
+@media (max-width: 1023px) {
+  .main-com-sidebar {
+    margin-left: 0;
+    padding-top: 56px;
+  }
+}
+
+/* Padding das páginas responsivo */
+.pagina {
+  padding: 2rem;
+}
+@media (max-width: 640px) {
+  .pagina {
+    padding: 1rem;
+  }
+}
+
+/* Tabelas: scroll horizontal no mobile */
+.tabela-scroll {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+.tabela-scroll table {
+  min-width: 560px;
+}
+
+/* Cards de métricas: 2 colunas no mobile */
+.grid-metricas {
+  display: grid;
+  gap: 1rem;
+  grid-template-columns: repeat(2, 1fr);
+}
+@media (min-width: 1024px) {
+  .grid-metricas-4 { grid-template-columns: repeat(4, 1fr); }
+  .grid-metricas-3 { grid-template-columns: repeat(3, 1fr); }
+}
+
+/* Chat IA: menor no mobile */
+@media (max-width: 640px) {
+  .chat-ia-window {
+    width: calc(100vw - 32px) !important;
+    right: 16px !important;
+    bottom: 80px !important;
+  }
+}
+
+/* ===== RESPONSIVIDADE GLOBAL ===== */
+
+/* Tabelas com scroll horizontal no mobile */
+.overflow-x-auto {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+/* Cards de passeios — 1 coluna no mobile, 2 no tablet, 3 no desktop */
+@media (max-width: 640px) {
+  .grid-cols-3 { grid-template-columns: repeat(1, minmax(0, 1fr)) !important; }
+  .grid-cols-2 { grid-template-columns: repeat(1, minmax(0, 1fr)) !important; }
+}
+
+@media (min-width: 641px) and (max-width: 1023px) {
+  .grid-cols-3 { grid-template-columns: repeat(2, minmax(0, 1fr)) !important; }
+}
+
+/* Textos menores no mobile */
+@media (max-width: 640px) {
+  .text-3xl { font-size: 1.5rem !important; }
+  .text-2xl { font-size: 1.25rem !important; }
+}
+
+/* Modais ocupam tela toda no mobile */
+@media (max-width: 640px) {
+  .max-w-lg { max-width: calc(100vw - 2rem) !important; }
+  .max-w-2xl { max-width: calc(100vw - 2rem) !important; }
+}
+
+/* Botões lado a lado viram coluna no mobile */
+@media (max-width: 480px) {
+  .flex-wrap { flex-wrap: wrap; }
+}
