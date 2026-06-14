@@ -10,13 +10,29 @@
     "preview": "vite preview"
   },
   "dependencies": {
+<<<<<<< HEAD
     "@tailwindcss/vite": "^4.3.0",
     "@tanstack/react-query": "^5.101.0",
     "axios": "^1.17.0",
+=======
+    "@emotion/react": "^11.14.0",
+    "@emotion/styled": "^11.14.1",
+    "@mui/material": "^9.1.0",
+    "@mui/x-date-pickers": "^9.4.0",
+    "@tailwindcss/vite": "^4.3.0",
+    "@tanstack/react-query": "^5.101.0",
+    "axios": "^1.17.0",
+    "date-fns": "^4.4.0",
+    "dayjs": "^1.11.21",
+>>>>>>> 56f09569d6ed5c14d91c4d1c3a27b94043c9c2b0
     "html5-qrcode": "^2.3.8",
     "lucide-react": "^1.17.0",
     "qrcode": "^1.5.4",
     "react": "^19.2.6",
+<<<<<<< HEAD
+=======
+    "react-datepicker": "^9.1.0",
+>>>>>>> 56f09569d6ed5c14d91c4d1c3a27b94043c9c2b0
     "react-dom": "^19.2.6",
     "react-router-dom": "^7.17.0",
     "tailwindcss": "^4.3.0"

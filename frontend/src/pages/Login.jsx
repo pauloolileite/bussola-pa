@@ -1,6 +1,10 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
+<<<<<<< HEAD
 import { login as autenticar, registrarCliente } from '../services/auth'
+=======
+import axios from 'axios'
+>>>>>>> 56f09569d6ed5c14d91c4d1c3a27b94043c9c2b0
 
 export default function Login() {
   const [aba, setAba] = useState('entrar')
@@ -19,7 +23,13 @@ export default function Login() {
     setErro('')
     setLoading(true)
     try {
+<<<<<<< HEAD
       await autenticar(username, password)
+=======
+      const res = await axios.post('http://127.0.0.1:8000/api/token/', { username, password })
+      localStorage.setItem('access', res.data.access)
+      localStorage.setItem('refresh', res.data.refresh)
+>>>>>>> 56f09569d6ed5c14d91c4d1c3a27b94043c9c2b0
       navigate('/dashboard')
     } catch (err) {
       const msg = err.response?.data
@@ -38,7 +48,13 @@ export default function Login() {
     setErro('')
     setLoading(true)
     try {
+<<<<<<< HEAD
       await registrarCliente({ username, nome, email, password })
+=======
+      await axios.post('http://127.0.0.1:8000/api/usuarios/', {
+        username, first_name: nome, email, password, perfil: 'cliente'
+      })
+>>>>>>> 56f09569d6ed5c14d91c4d1c3a27b94043c9c2b0
       setSucesso('Conta criada! Faça login.')
       setAba('entrar')
     } catch {

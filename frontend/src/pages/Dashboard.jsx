@@ -1,7 +1,20 @@
 import { useEffect, useState } from 'react'
+<<<<<<< HEAD
 import { CalendarCheck, AlertTriangle, DollarSign, TrendingUp } from 'lucide-react'
 import api from '../api'
 import { STATUS_CORES } from '../lib/reservaStatus'
+=======
+import { CalendarCheck, Users, AlertTriangle, DollarSign, TrendingUp } from 'lucide-react'
+import api from '../api'
+
+const STATUS_CORES = {
+  solicitada: 'bg-blue-100 text-blue-800',
+  confirmada: 'bg-green-100 text-green-800',
+  em_andamento: 'bg-orange-100 text-orange-800',
+  concluida: 'bg-teal-100 text-teal-800',
+  cancelada: 'bg-red-100 text-red-800',
+}
+>>>>>>> 56f09569d6ed5c14d91c4d1c3a27b94043c9c2b0
 
 export default function Dashboard() {
   const [reservas, setReservas] = useState([])

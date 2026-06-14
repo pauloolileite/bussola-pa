@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { Plus, QrCode, X, CalendarCheck, Pencil, AlertTriangle } from 'lucide-react'
+<<<<<<< HEAD
 import { CORES, COR_PRIMARIA, COR_SECUNDARIA } from '../lib/theme'
 import { STATUS_CORES, TRANSICOES, LABELS_TRANSICAO, formatarStatus } from '../lib/reservaStatus'
 import api from '../api'
@@ -103,6 +104,39 @@ function FormReserva({
       </div>
     </form>
   )
+=======
+import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider'
+import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs'
+import { MobileDatePicker } from '@mui/x-date-pickers/MobileDatePicker'
+import { MobileTimePicker } from '@mui/x-date-pickers/MobileTimePicker'
+import dayjs from 'dayjs'
+import 'dayjs/locale/pt-br'
+import { dialogSx, inputSx, COR_PRIMARIA, COR_SECUNDARIA, CORES } from '../utils/muiTheme'
+import api from '../api'
+import QRCodeReserva from '../components/QRCodeReserva'
+
+const STATUS_CORES = {
+  solicitada: 'bg-blue-100 text-blue-800',
+  confirmada: 'bg-green-100 text-green-800',
+  em_andamento: 'bg-orange-100 text-orange-800',
+  concluida: 'bg-teal-100 text-teal-800',
+  cancelada: 'bg-red-100 text-red-800',
+}
+
+const TRANSICOES = {
+  solicitada: ['confirmada', 'cancelada'],
+  confirmada: ['em_andamento', 'cancelada'],
+  em_andamento: ['concluida', 'cancelada'],
+  concluida: [],
+  cancelada: [],
+}
+
+const LABELS_TRANSICAO = {
+  confirmada: 'Confirmar',
+  em_andamento: 'Iniciar',
+  concluida: 'Concluir',
+  cancelada: 'Cancelar',
+>>>>>>> 56f09569d6ed5c14d91c4d1c3a27b94043c9c2b0
 }
 
 export default function Reservas() {
@@ -122,10 +156,17 @@ export default function Reservas() {
     cliente: '', passeio: '', guia_responsavel: '',
     quantidade_turistas: 1, observacoes: ''
   })
+<<<<<<< HEAD
   const [dataReserva, setDataReserva] = useState('')
   const [horarioReserva, setHorarioReserva] = useState('')
   const [dataEditar, setDataEditar] = useState('')
   const [horarioEditar, setHorarioEditar] = useState('')
+=======
+  const [dataReserva, setDataReserva] = useState(null)
+  const [horarioReserva, setHorarioReserva] = useState(null)
+  const [dataEditar, setDataEditar] = useState(null)
+  const [horarioEditar, setHorarioEditar] = useState(null)
+>>>>>>> 56f09569d6ed5c14d91c4d1c3a27b94043c9c2b0
   const [modalCliente, setModalCliente] = useState(false)
   const [formCliente, setFormCliente] = useState({ nome: '', telefone: '', email: '' })
   const [erro, setErro] = useState('')
@@ -144,6 +185,24 @@ export default function Reservas() {
   }
 
   function abrirEditar() {
+<<<<<<< HEAD
+=======
+  setFormEditar({
+    cliente: reservaSelecionada.cliente,
+    passeio: reservaSelecionada.passeio,
+    guia_responsavel: reservaSelecionada.guia_responsavel,
+    quantidade_turistas: reservaSelecionada.quantidade_turistas,
+    observacoes: reservaSelecionada.observacoes || '',
+  })
+  setDataEditar(dayjs(reservaSelecionada.data_reserva))
+  setHorarioEditar(dayjs(`2000-01-01T${reservaSelecionada.horario_reserva}`))
+  setErroForm('')
+  setMostrarEditar(true)
+  }
+
+  function confirmarEditar() {
+    setMostrarConfirmacao(false)
+>>>>>>> 56f09569d6ed5c14d91c4d1c3a27b94043c9c2b0
     setFormEditar({
       cliente: reservaSelecionada.cliente,
       passeio: reservaSelecionada.passeio,
@@ -151,8 +210,13 @@ export default function Reservas() {
       quantidade_turistas: reservaSelecionada.quantidade_turistas,
       observacoes: reservaSelecionada.observacoes || '',
     })
+<<<<<<< HEAD
     setDataEditar(reservaSelecionada.data_reserva || '')
     setHorarioEditar((reservaSelecionada.horario_reserva || '').slice(0, 5))
+=======
+    setDataEditar(dayjs(reservaSelecionada.data_reserva))
+    setHorarioEditar(dayjs(`2000-01-01T${reservaSelecionada.horario_reserva}`))
+>>>>>>> 56f09569d6ed5c14d91c4d1c3a27b94043c9c2b0
     setErroForm('')
     setMostrarEditar(true)
   }
@@ -173,11 +237,21 @@ export default function Reservas() {
     if (!dataReserva || !horarioReserva) { setErroForm('Preencha a data e o horário.'); return }
     setLoading(true)
     try {
+<<<<<<< HEAD
       await api.post('/reservas/', { ...form, data_reserva: dataReserva, horario_reserva: horarioReserva })
       setMostrarModal(false)
       setForm({ cliente: '', passeio: '', guia_responsavel: '', quantidade_turistas: 1, observacoes: '' })
       setDataReserva('')
       setHorarioReserva('')
+=======
+      const data_reserva = dataReserva.format('YYYY-MM-DD')
+      const horario_reserva = horarioReserva.format('HH:mm:ss')
+      await api.post('/reservas/', { ...form, data_reserva, horario_reserva })
+      setMostrarModal(false)
+      setForm({ cliente: '', passeio: '', guia_responsavel: '', quantidade_turistas: 1, observacoes: '' })
+      setDataReserva(null)
+      setHorarioReserva(null)
+>>>>>>> 56f09569d6ed5c14d91c4d1c3a27b94043c9c2b0
       carregarReservas()
     } catch (err) {
       const msg = err.response?.data
@@ -187,6 +261,7 @@ export default function Reservas() {
     }
   }
 
+<<<<<<< HEAD
   function handleEditar(e) {
     e.preventDefault()
     setMostrarConfirmacao(true)
@@ -211,6 +286,34 @@ export default function Reservas() {
       setLoading(false)
     }
   }
+=======
+  async function handleEditar(e) {
+  e.preventDefault()
+  setMostrarConfirmacao(true)
+}
+
+async function confirmarEditar() {
+  setMostrarConfirmacao(false)
+  setErroForm('')
+  if (!dataEditar || !horarioEditar) { setErroForm('Preencha a data e o horário.'); return }
+  setLoading(true)
+  try {
+    const data_reserva = dataEditar.format('YYYY-MM-DD')
+    const horario_reserva = horarioEditar.format('HH:mm:ss')
+    const res = await api.patch(`/reservas/${reservaSelecionada.id}/`, {
+      ...formEditar, data_reserva, horario_reserva
+    })
+    setReservas(prev => prev.map(r => r.id === reservaSelecionada.id ? res.data : r))
+    setReservaSelecionada(res.data)
+    setMostrarEditar(false)
+  } catch (err) {
+    const msg = err.response?.data
+    setErroForm(typeof msg === 'object' ? Object.values(msg).flat().join(' ') : 'Erro ao editar reserva.')
+  } finally {
+    setLoading(false)
+  }
+}
+>>>>>>> 56f09569d6ed5c14d91c4d1c3a27b94043c9c2b0
 
   async function salvarCliente(e) {
     e.preventDefault()
@@ -225,8 +328,96 @@ export default function Reservas() {
     }
   }
 
+<<<<<<< HEAD
   return (
     <>
+=======
+  function FormReserva({ formData, setFormData, data, setData, horario, setHorario, onSubmit, onCancel }) {
+    return (
+      <form onSubmit={onSubmit} className="space-y-4">
+        {erroForm && (
+          <p className="text-sm px-3 py-2 rounded-lg" style={{ color: CORES.perigo, background: CORES.perigoBg }}>
+            {erroForm}
+          </p>
+        )}
+        <div className="grid grid-cols-2 gap-4">
+          <div>
+            <label className="block text-sm font-medium mb-1.5 text-gray-600">Cliente</label>
+            <div className="flex gap-2">
+              <select className="flex-1 px-4 py-2.5 border border-gray-200 rounded-lg text-sm outline-none cursor-pointer"
+                value={formData.cliente} onChange={e => setFormData({ ...formData, cliente: e.target.value })} required>
+                <option value="">Selecione...</option>
+                {clientes.map(c => <option key={c.id} value={c.id}>{c.nome}</option>)}
+              </select>
+              <button type="button" onClick={() => setModalCliente(true)}
+                className="w-10 h-10 rounded-lg flex items-center justify-center text-white transition-all active:scale-95 hover:opacity-90 cursor-pointer flex-shrink-0"
+                style={{ background: CORES.sucesso }}>
+                <Plus size={16} />
+              </button>
+            </div>
+          </div>
+          <div>
+            <label className="block text-sm font-medium mb-1.5 text-gray-600">Passeio</label>
+            <select className="w-full px-4 py-2.5 border border-gray-200 rounded-lg text-sm outline-none cursor-pointer"
+              value={formData.passeio} onChange={e => setFormData({ ...formData, passeio: e.target.value })} required>
+              <option value="">Selecione...</option>
+              {passeios.map(p => <option key={p.id} value={p.id}>{p.nome}</option>)}
+            </select>
+          </div>
+          <div>
+            <label className="block text-sm font-medium mb-1.5 text-gray-600">Guia Responsável</label>
+            <select className="w-full px-4 py-2.5 border border-gray-200 rounded-lg text-sm outline-none cursor-pointer"
+              value={formData.guia_responsavel} onChange={e => setFormData({ ...formData, guia_responsavel: e.target.value })} required>
+              <option value="">Selecione...</option>
+              {guias.map(g => (
+                <option key={g.id} value={g.id}>
+                  {g.first_name && g.last_name ? `${g.first_name} ${g.last_name}` : g.username}
+                </option>
+              ))}
+            </select>
+          </div>
+          <div>
+            <label className="block text-sm font-medium mb-1.5 text-gray-600">Quantidade de Turistas</label>
+            <input type="number" min={1}
+              className="w-full px-4 py-2.5 border border-gray-200 rounded-lg text-sm outline-none"
+              value={formData.quantidade_turistas}
+              onChange={e => setFormData({ ...formData, quantidade_turistas: e.target.value })} required />
+          </div>
+          <div>
+            <label className="block text-sm font-medium mb-1.5 text-gray-600">Data da Reserva</label>
+            <MobileDatePicker value={data} onChange={setData} format="DD/MM/YYYY" disablePast
+              slotProps={{ textField: { sx: inputSx }, dialog: { sx: dialogSx } }} />
+          </div>
+          <div>
+            <label className="block text-sm font-medium mb-1.5 text-gray-600">Horário</label>
+            <MobileTimePicker value={horario} onChange={setHorario} ampm={false} views={['hours', 'minutes']}
+              slotProps={{ textField: { sx: inputSx }, dialog: { sx: dialogSx } }} />
+          </div>
+        </div>
+        <div>
+          <label className="block text-sm font-medium mb-1.5 text-gray-600">Observações</label>
+          <textarea className="w-full px-4 py-2.5 border border-gray-200 rounded-lg text-sm outline-none resize-none"
+            rows={3} placeholder="Informações adicionais..."
+            value={formData.observacoes} onChange={e => setFormData({ ...formData, observacoes: e.target.value })} />
+        </div>
+        <div className="flex gap-3 pt-2">
+          <button type="submit" disabled={loading}
+            className="flex-1 py-2.5 rounded-lg text-white text-sm font-semibold transition-all active:scale-95 hover:opacity-90 cursor-pointer"
+            style={{ background: CORES.sucesso, opacity: loading ? 0.7 : 1 }}>
+            {loading ? 'Salvando...' : 'Salvar'}
+          </button>
+          <button type="button" onClick={onCancel}
+            className="flex-1 py-2.5 rounded-lg text-sm font-medium border border-gray-200 text-gray-600 hover:bg-gray-50 transition-all active:scale-95 cursor-pointer">
+            Cancelar
+          </button>
+        </div>
+      </form>
+    )
+  }
+
+  return (
+    <LocalizationProvider dateAdapter={AdapterDayjs} adapterLocale="pt-br">
+>>>>>>> 56f09569d6ed5c14d91c4d1c3a27b94043c9c2b0
       <div className="p-4 md:p-8 max-w-6xl mx-auto">
         <div className="flex items-center justify-between mb-6">
           <div>
@@ -273,7 +464,11 @@ export default function Reservas() {
                     <td className="px-5 py-4 text-sm text-gray-700">{r.quantidade_turistas}</td>
                     <td className="px-5 py-4">
                       <span className={`text-xs font-semibold px-3 py-1 rounded-full ${STATUS_CORES[r.status]}`}>
+<<<<<<< HEAD
                         {formatarStatus(r.status)}
+=======
+                        {r.status.replace('_', ' ')}
+>>>>>>> 56f09569d6ed5c14d91c4d1c3a27b94043c9c2b0
                       </span>
                     </td>
                     <td className="px-5 py-4">
@@ -348,7 +543,11 @@ export default function Reservas() {
                 <div className="flex justify-between">
                   <span className="text-gray-400">Status</span>
                   <span className={`text-xs font-semibold px-2 py-0.5 rounded-full ${STATUS_CORES[reservaSelecionada.status]}`}>
+<<<<<<< HEAD
                     {formatarStatus(reservaSelecionada.status)}
+=======
+                    {reservaSelecionada.status.replace('_', ' ')}
+>>>>>>> 56f09569d6ed5c14d91c4d1c3a27b94043c9c2b0
                   </span>
                 </div>
               </div>
@@ -412,12 +611,15 @@ export default function Reservas() {
                 setHorario={setHorarioEditar}
                 onSubmit={handleEditar}
                 onCancel={() => setMostrarEditar(false)}
+<<<<<<< HEAD
                 erroForm={erroForm}
                 clientes={clientes}
                 passeios={passeios}
                 guias={guias}
                 loading={loading}
                 onNovoCliente={() => setModalCliente(true)}
+=======
+>>>>>>> 56f09569d6ed5c14d91c4d1c3a27b94043c9c2b0
               />
             </div>
           </div>
@@ -450,6 +652,7 @@ export default function Reservas() {
                 setHorario={setHorarioReserva}
                 onSubmit={handleSubmit}
                 onCancel={() => { setMostrarModal(false); setErroForm('') }}
+<<<<<<< HEAD
                 erroForm={erroForm}
                 clientes={clientes}
                 passeios={passeios}
@@ -457,6 +660,8 @@ export default function Reservas() {
                 loading={loading}
                 onNovoCliente={() => setModalCliente(true)}
                 minData={hojeISO()}
+=======
+>>>>>>> 56f09569d6ed5c14d91c4d1c3a27b94043c9c2b0
               />
             </div>
           </div>
@@ -467,7 +672,11 @@ export default function Reservas() {
       {modalCliente && (
         <div className="fixed inset-0 z-[60] flex items-center justify-center" style={{ background: 'rgba(0,0,0,0.5)' }}>
           <div className="bg-white rounded-2xl shadow-2xl w-full max-w-sm mx-4 overflow-hidden">
+<<<<<<< HEAD
             <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100">
+=======
+            <div className="flex items-abrircenter justify-between px-6 py-4 border-b border-gray-100">
+>>>>>>> 56f09569d6ed5c14d91c4d1c3a27b94043c9c2b0
               <h3 className="font-bold text-base" style={{ color: COR_PRIMARIA }}>Novo Cliente</h3>
               <button onClick={() => setModalCliente(false)}
                 className="w-8 h-8 rounded-lg flex items-center justify-center text-gray-400 hover:bg-gray-100 cursor-pointer transition-colors">
@@ -510,6 +719,12 @@ export default function Reservas() {
           </div>
         </div>
       )}
+<<<<<<< HEAD
     </>
   )
 }
+=======
+    </LocalizationProvider>
+  )
+}
+>>>>>>> 56f09569d6ed5c14d91c4d1c3a27b94043c9c2b0

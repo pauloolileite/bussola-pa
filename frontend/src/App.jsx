@@ -10,10 +10,17 @@ import Validacao from './pages/Validacao'
 import Sidebar from './components/Sidebar'
 import PontosTuristicos from './pages/PontosTuristicos'
 import AssistenteIA from './components/AssistenteIA'
+<<<<<<< HEAD
 import { isAuthenticated } from './lib/session'
 
 function RotaProtegida({ children }) {
   return isAuthenticated() ? children : <Navigate to="/login" />
+=======
+
+function RotaProtegida({ children }) {
+  const token = localStorage.getItem('access')
+  return token ? children : <Navigate to="/login" />
+>>>>>>> 56f09569d6ed5c14d91c4d1c3a27b94043c9c2b0
 }
 
 export default function App() {
