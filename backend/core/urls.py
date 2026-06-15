@@ -22,6 +22,7 @@ urlpatterns = [
     path('api/', include('reservas.urls')),
     path('api/', include('ocorrencias.urls')),
     path('api/', include('financeiro.urls')),
+    path('api/ia/', include('ia.urls')),
 ]
 
 # Em desenvolvimento, serve os arquivos enviados (anexos de ocorrências).

@@ -30,14 +30,14 @@ export default function Financeiro() {
   ]
 
   return (
-    <div className="p-8 max-w-5xl mx-auto">
+    <div className="p-4 md:p-8 max-w-6xl mx-auto">
       <h2 className="text-2xl font-bold mb-1" style={{ color: '#000441', fontFamily: 'Montserrat, sans-serif' }}>
         Meu Financeiro
       </h2>
       <p className="text-sm text-gray-500 mb-8">Acompanhe seus ganhos e comissões</p>
 
       {/* Cards */}
-      <div className="grid grid-cols-3 gap-4 mb-8">
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-8">
         {cards.map(({ label, valor, icone: Icone, cor, bg }) => (
           <div key={label} className="bg-white rounded-xl border border-gray-100 shadow-sm p-5">
             <div className={`w-10 h-10 rounded-lg ${bg} flex items-center justify-center mb-3`}>
@@ -60,7 +60,30 @@ export default function Financeiro() {
             Exportar
           </button>
         </div>
-        <table className="w-full">
+        {/* MOBILE: cartões */}
+        <div className="md:hidden p-4 space-y-3">
+          {registros.map(f => (
+            <div key={f.id} className="border border-gray-100 rounded-lg p-3">
+              <div className="flex items-center justify-between mb-2">
+                <span className="text-sm font-bold" style={{ color: '#000441' }}>#TR-{f.reserva}</span>
+                <span className={`text-xs font-semibold px-2.5 py-0.5 rounded-full ${STATUS_CORES[f.status_pagamento]}`}>
+                  {f.status_pagamento.toUpperCase()}
+                </span>
+              </div>
+              <div className="space-y-1 text-sm">
+                <div className="flex justify-between gap-2"><span className="text-gray-400">Total do Passeio</span><span className="text-gray-700">R$ {parseFloat(f.valor_total).toFixed(2)}</span></div>
+                <div className="flex justify-between gap-2"><span className="text-gray-400">Sua Comissão</span><span className="font-semibold" style={{ color: '#000441' }}>R$ {parseFloat(f.valor_guia).toFixed(2)}</span></div>
+              </div>
+            </div>
+          ))}
+          {registros.length === 0 && (
+            <p className="text-center text-sm text-gray-400 py-8">Nenhum registro financeiro.</p>
+          )}
+        </div>
+
+        {/* DESKTOP: tabela */}
+        <div className="hidden md:block overflow-x-auto">
+<table className="w-full">
           <thead>
             <tr className="bg-gray-50 text-xs font-semibold text-gray-500 uppercase tracking-wider">
               <th className="px-6 py-3 text-left">Reserva</th>
@@ -99,6 +122,7 @@ export default function Financeiro() {
             )}
           </tbody>
         </table>
+</div>
       </div>
     </div>
   )

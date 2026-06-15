@@ -1,5 +1,13 @@
 import { useEffect, useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { Compass, Filter, Plus, X, MapPin } from 'lucide-react'
+import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider'
+import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs'
+import { MobileDatePicker } from '@mui/x-date-pickers/MobileDatePicker'
+import { MobileTimePicker } from '@mui/x-date-pickers/MobileTimePicker'
+import dayjs from 'dayjs'
+import 'dayjs/locale/pt-br'
+import { dialogSx, inputSx } from '../utils/muiTheme'
 import { useAuth } from '../hooks/useAuth'
 import api from '../api'
 
@@ -36,13 +44,20 @@ function Modal({ titulo, onClose, children }) {
 }
 
 export default function Passeios() {
-  const { isAdmin } = useAuth()
+  const { isAdmin, isCliente } = useAuth()
+  const navigate = useNavigate()
   const [aba, setAba] = useState('passeios')
   const [passeios, setPasseios] = useState([])
   const [pontos, setPontos] = useState([])
   const [categoria, setCategoria] = useState('')
   const [modalPasseio, setModalPasseio] = useState(false)
   const [modalPonto, setModalPonto] = useState(false)
+  const [modalSolicitar, setModalSolicitar] = useState(false)
+  const [passeioSolicitado, setPasseioSolicitado] = useState(null)
+  const [formSolicitar, setFormSolicitar] = useState({ quantidade_turistas: 1, observacoes: '' })
+  const [dataSolicitar, setDataSolicitar] = useState(null)
+  const [horarioSolicitar, setHorarioSolicitar] = useState(null)
+  const [loadingSolicitar, setLoadingSolicitar] = useState(false)
   const [formPasseio, setFormPasseio] = useState({ nome: '', descricao: '', categoria: 'catamara', tipo_valor: 'fixo', valor: '', ponto_turistico: '' })
   const [formPonto, setFormPonto] = useState({ nome: '', descricao: '', localizacao: '' })
   const [erro, setErro] = useState('')
@@ -58,6 +73,40 @@ export default function Passeios() {
   function exibirSucesso(msg) {
     setSucesso(msg)
     setTimeout(() => setSucesso(''), 3000)
+  }
+
+  function abrirSolicitacao(passeio) {
+    setPasseioSolicitado(passeio)
+    setFormSolicitar({ quantidade_turistas: 1, observacoes: '' })
+    setDataSolicitar(null)
+    setHorarioSolicitar(null)
+    setErro('')
+    setModalSolicitar(true)
+  }
+
+  async function enviarSolicitacao(e) {
+    e.preventDefault()
+    setErro('')
+    if (!dataSolicitar || !horarioSolicitar) { setErro('Escolha a data e o horário.'); return }
+    setLoadingSolicitar(true)
+    try {
+      await api.post('/reservas/solicitar/', {
+        passeio: passeioSolicitado.id,
+        data_reserva: dataSolicitar.format('YYYY-MM-DD'),
+        horario_reserva: horarioSolicitar.format('HH:mm:ss'),
+        quantidade_turistas: formSolicitar.quantidade_turistas,
+        observacoes: formSolicitar.observacoes,
+      })
+      setModalSolicitar(false)
+      exibirSucesso('Solicitação enviada! Acompanhe em "Minhas Reservas".')
+    } catch (err) {
+      const dados = err.response?.data
+      if (dados?.erro) setErro(dados.erro)
+      else if (dados && typeof dados === 'object') setErro(Object.values(dados).flat().join(' '))
+      else setErro('Não foi possível enviar a solicitação.')
+    } finally {
+      setLoadingSolicitar(false)
+    }
   }
 
   async function salvarPasseio(e) {
@@ -95,7 +144,8 @@ export default function Passeios() {
   }
 
   return (
-    <div className="p-8 max-w-6xl mx-auto">
+    <LocalizationProvider dateAdapter={AdapterDayjs} adapterLocale="pt-br">
+      <div className="p-4 md:p-8 max-w-6xl mx-auto">
       <div className="flex items-center justify-between mb-6">
         <div>
           <h2 className="text-2xl font-bold" style={{ color: '#000441', fontFamily: 'Montserrat, sans-serif' }}>
@@ -162,9 +212,12 @@ export default function Passeios() {
                 <h3 className="font-semibold text-base mb-1" style={{ color: '#000441' }}>{p.nome}</h3>
                 <p className="text-sm text-gray-500 leading-relaxed line-clamp-2 mb-3">{p.descricao}</p>
                 {p.ponto_turistico_nome && <p className="text-xs text-gray-400 mb-3">📍 {p.ponto_turistico_nome}</p>}
-                <button className="w-full py-2 rounded-lg text-white text-sm font-semibold transition-all active:scale-95 hover:opacity-90 cursor-pointer" style={{ background: '#a53c00' }}>
-                  Solicitar Passeio
-                </button>
+                {isCliente && (
+                  <button onClick={() => abrirSolicitacao(p)}
+                    className="w-full py-2 rounded-lg text-white text-sm font-semibold transition-all active:scale-95 hover:opacity-90 cursor-pointer" style={{ background: '#a53c00' }}>
+                    Solicitar Passeio
+                  </button>
+                )}
               </div>
             </div>
           ))}
@@ -227,7 +280,7 @@ export default function Passeios() {
                 rows={3} placeholder="Descreva o passeio..." value={formPasseio.descricao}
                 onChange={e => setFormPasseio({ ...formPasseio, descricao: e.target.value })} />
             </div>
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
                 <label className="block text-sm font-medium mb-1.5 text-gray-600">Categoria</label>
                 <select className="w-full px-4 py-2.5 border border-gray-200 rounded-lg text-sm outline-none cursor-pointer"
@@ -300,5 +353,53 @@ export default function Passeios() {
         </Modal>
       )}
     </div>
+
+      {/* Modal: solicitar passeio (cliente) */}
+      {modalSolicitar && passeioSolicitado && (
+        <Modal titulo={`Solicitar: ${passeioSolicitado.nome}`} onClose={() => setModalSolicitar(false)}>
+          <form onSubmit={enviarSolicitacao} className="space-y-4">
+            {erro && (
+              <p className="text-sm px-3 py-2 rounded-lg bg-red-50 text-red-700">{erro}</p>
+            )}
+            <div>
+              <label className="block text-sm font-medium mb-1.5 text-gray-600">Data do Passeio</label>
+              <MobileDatePicker value={dataSolicitar} onChange={setDataSolicitar} format="DD/MM/YYYY" disablePast
+                slotProps={{ textField: { sx: inputSx, fullWidth: true }, dialog: { sx: dialogSx } }} />
+            </div>
+            <div>
+              <label className="block text-sm font-medium mb-1.5 text-gray-600">Horário</label>
+              <MobileTimePicker value={horarioSolicitar} onChange={setHorarioSolicitar} ampm={false} views={['hours', 'minutes']}
+                slotProps={{ textField: { sx: inputSx, fullWidth: true }, dialog: { sx: dialogSx } }} />
+            </div>
+            <div>
+              <label className="block text-sm font-medium mb-1.5 text-gray-600">Quantidade de Turistas</label>
+              <input type="number" min={1} max={100}
+                className="w-full px-4 py-2.5 border border-gray-200 rounded-lg text-sm outline-none"
+                value={formSolicitar.quantidade_turistas}
+                onChange={e => setFormSolicitar({ ...formSolicitar, quantidade_turistas: e.target.value })} required />
+            </div>
+            <div>
+              <label className="block text-sm font-medium mb-1.5 text-gray-600">Observações (opcional)</label>
+              <textarea rows={3} maxLength={1000}
+                className="w-full px-4 py-2.5 border border-gray-200 rounded-lg text-sm outline-none resize-none"
+                placeholder="Alguma informação para o guia?"
+                value={formSolicitar.observacoes}
+                onChange={e => setFormSolicitar({ ...formSolicitar, observacoes: e.target.value })} />
+            </div>
+            <div className="flex gap-3 pt-1">
+              <button type="submit" disabled={loadingSolicitar}
+                className="flex-1 py-2.5 rounded-lg text-white text-sm font-semibold active:scale-95 hover:opacity-90 cursor-pointer"
+                style={{ background: '#a53c00', opacity: loadingSolicitar ? 0.7 : 1 }}>
+                {loadingSolicitar ? 'Enviando...' : 'Enviar Solicitação'}
+              </button>
+              <button type="button" onClick={() => setModalSolicitar(false)}
+                className="flex-1 py-2.5 rounded-lg text-sm border border-gray-200 text-gray-600 hover:bg-gray-50 active:scale-95 cursor-pointer">
+                Cancelar
+              </button>
+            </div>
+          </form>
+        </Modal>
+      )}
+    </LocalizationProvider>
   )
 }

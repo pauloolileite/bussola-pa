@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { Plus, QrCode, X, CalendarCheck, Pencil, AlertTriangle } from 'lucide-react'
+import { Plus, QrCode, X, CalendarCheck, Pencil, AlertTriangle, Copy, Check } from 'lucide-react'
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider'
 import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs'
 import { MobileDatePicker } from '@mui/x-date-pickers/MobileDatePicker'
@@ -58,7 +58,7 @@ function FormReserva({
           {erroForm}
         </p>
       )}
-      <div className="grid grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <div>
           <label className="block text-sm font-medium mb-1.5 text-gray-600">Cliente</label>
           <div className="flex gap-2">
@@ -162,6 +162,13 @@ export default function Reservas() {
   const [erro, setErro] = useState('')
   const [erroForm, setErroForm] = useState('')
   const [loading, setLoading] = useState(false)
+  const [codigoCopiado, setCodigoCopiado] = useState(false)
+
+  function copiarCodigo(codigo) {
+    navigator.clipboard.writeText(codigo)
+    setCodigoCopiado(true)
+    setTimeout(() => setCodigoCopiado(false), 2000)
+  }
 
   useEffect(() => {
     carregarReservas()
@@ -275,7 +282,7 @@ export default function Reservas() {
 
   return (
     <LocalizationProvider dateAdapter={AdapterDayjs} adapterLocale="pt-br">
-      <div className="p-8 max-w-6xl mx-auto">
+      <div className="p-4 md:p-8 max-w-6xl mx-auto">
         <div className="flex items-center justify-between mb-6">
           <div>
             <h2 className="text-2xl font-bold" style={{ color: COR_PRIMARIA, fontFamily: 'Montserrat, sans-serif' }}>
@@ -296,10 +303,54 @@ export default function Reservas() {
           </p>
         )}
 
-        <div className="flex gap-6 items-start">
-          {/* Tabela */}
-          <div className="flex-1 bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden">
-            <table className="w-full">
+        <div className="flex flex-col lg:flex-row gap-6 items-start">
+          {/* Tabela / Cartões */}
+          <div className="flex-1 w-full bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden">
+            {/* MOBILE: cartões */}
+            <div className="md:hidden p-4 space-y-3">
+              {reservas.map(r => (
+                <div key={r.id} onClick={() => setReservaSelecionada(r)}
+                  className="border border-gray-100 rounded-lg p-3 cursor-pointer active:bg-gray-50"
+                  style={{ background: reservaSelecionada?.id === r.id ? '#f0f4ff' : '' }}>
+                  <div className="flex items-center justify-between mb-2">
+                    <span className="text-sm font-bold" style={{ color: COR_PRIMARIA }}>#BPA-{r.id}</span>
+                    <span className={`text-xs font-semibold px-2.5 py-0.5 rounded-full ${STATUS_CORES[r.status]}`}>
+                      {r.status.replace('_', ' ')}
+                    </span>
+                  </div>
+                  <div className="space-y-1 text-sm mb-3">
+                    <div className="flex justify-between gap-2"><span className="text-gray-400">Passeio</span><span className="text-gray-700 truncate text-right">{r.passeio_nome || r.passeio}</span></div>
+                    <div className="flex justify-between gap-2"><span className="text-gray-400">Data</span><span className="text-gray-500">{r.data_reserva}</span></div>
+                    <div className="flex justify-between gap-2"><span className="text-gray-400">Turistas</span><span className="text-gray-700">{r.quantidade_turistas}</span></div>
+                  </div>
+                  {TRANSICOES[r.status]?.length > 0 && (
+                    <div className="flex gap-1 flex-wrap">
+                      {TRANSICOES[r.status].map(s => (
+                        <button key={s}
+                          onClick={e => { e.stopPropagation(); atualizarStatus(r.id, s) }}
+                          className="text-xs px-3 py-1.5 rounded font-medium active:scale-95 cursor-pointer text-white"
+                          style={{
+                            background:
+                              s === 'cancelada' ? CORES.perigo :
+                              s === 'concluida' ? CORES.sucesso :
+                              s === 'confirmada' ? CORES.info :
+                              COR_SECUNDARIA
+                          }}>
+                          {LABELS_TRANSICAO[s]}
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              ))}
+              {reservas.length === 0 && (
+                <p className="text-center text-sm text-gray-400 py-8">Nenhuma reserva encontrada.</p>
+              )}
+            </div>
+
+            {/* DESKTOP: tabela */}
+            <div className="hidden md:block overflow-x-auto">
+<table className="w-full">
               <thead>
                 <tr className="bg-gray-50 text-xs font-semibold text-gray-500 uppercase tracking-wider">
                   <th className="px-5 py-3 text-left">ID</th>
@@ -353,11 +404,12 @@ export default function Reservas() {
                 )}
               </tbody>
             </table>
+</div>
           </div>
 
           {/* Painel QR code */}
           {reservaSelecionada && (
-            <div className="w-64 bg-white rounded-xl border border-gray-100 shadow-sm p-5 flex-shrink-0">
+            <div className="w-full lg:w-64 bg-white rounded-xl border border-gray-100 shadow-sm p-5 flex-shrink-0">
               <div className="flex items-center justify-between mb-1">
                 <div className="flex items-center gap-2">
                   <QrCode size={16} style={{ color: COR_PRIMARIA }} />
@@ -373,9 +425,25 @@ export default function Reservas() {
               <div className="flex justify-center mb-4">
                 <QRCodeReserva codigo={reservaSelecionada.codigo_qr} tamanho={160} />
               </div>
-              <p className="text-xs text-gray-500 text-center leading-relaxed mb-4">
+              <p className="text-xs text-gray-500 text-center leading-relaxed mb-3">
                 Apresente na guarita para validar a entrada.
               </p>
+              {/* Código UUID copiável (alternativa ao escaneamento do QR) */}
+              <div className="mb-4">
+                <p className="text-[10px] uppercase tracking-wider text-gray-400 mb-1">Código da reserva</p>
+                <div className="flex items-center gap-1.5">
+                  <code className="flex-1 text-[10px] text-gray-600 bg-gray-50 border border-gray-200 rounded px-2 py-1.5 truncate" title={reservaSelecionada.codigo_qr}>
+                    {reservaSelecionada.codigo_qr}
+                  </code>
+                  <button onClick={() => copiarCodigo(reservaSelecionada.codigo_qr)}
+                    className="flex items-center justify-center w-8 h-8 rounded-lg flex-shrink-0 transition-all active:scale-95 cursor-pointer text-white"
+                    style={{ background: codigoCopiado ? '#16a34a' : COR_PRIMARIA }}
+                    title="Copiar código">
+                    {codigoCopiado ? <Check size={14} /> : <Copy size={14} />}
+                  </button>
+                </div>
+                {codigoCopiado && <p className="text-[10px] text-green-600 mt-1">Código copiado!</p>}
+              </div>
               <div className="space-y-2 text-xs text-gray-600 border-t border-gray-100 pt-3">
                 <div className="flex justify-between">
                   <span className="text-gray-400">Passeio</span>

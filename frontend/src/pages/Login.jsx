@@ -1,6 +1,23 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import axios from 'axios'
+import api from '../api'
+import { LIMITES, emailValido } from '../utils/validacao'
+import MedidorSenha from '../components/MedidorSenha'
+
+const HOME_POR_PERFIL = {
+  admin: '/dashboard',
+  guia: '/reservas',
+  parceiro: '/validacao',
+  cliente: '/passeios',
+}
+
+function perfilDoToken(token) {
+  try {
+    return JSON.parse(atob(token.split('.')[1])).perfil
+  } catch {
+    return 'cliente'
+  }
+}
 
 export default function Login() {
   const [aba, setAba] = useState('entrar')
@@ -19,10 +36,11 @@ export default function Login() {
     setErro('')
     setLoading(true)
     try {
-      const res = await axios.post('http://127.0.0.1:8000/api/token/', { username, password })
+      const res = await api.post('/token/', { username, password })
       localStorage.setItem('access', res.data.access)
       localStorage.setItem('refresh', res.data.refresh)
-      navigate('/dashboard')
+      const perfil = perfilDoToken(res.data.access)
+      navigate(HOME_POR_PERFIL[perfil] || '/passeios')
     } catch (err) {
       const msg = err.response?.data
       if (msg && JSON.stringify(msg).toLowerCase().includes('inativo')) {
@@ -38,15 +56,25 @@ export default function Login() {
   async function handleCriarConta(e) {
     e.preventDefault()
     setErro('')
+    // Validações de interface antes de enviar (mensagens claras em pt-BR).
+    if (nome.trim().length < 2) { setErro('Informe seu nome completo.'); return }
+    if (username.trim().length < 3) { setErro('O usuário deve ter ao menos 3 caracteres.'); return }
+    if (!emailValido(email)) { setErro('Informe um e-mail válido.'); return }
+    if (password.length < 6) { setErro('A senha deve ter ao menos 6 caracteres.'); return }
     setLoading(true)
     try {
-      await axios.post('http://127.0.0.1:8000/api/usuarios/', {
-        username, first_name: nome, email, password, perfil: 'cliente'
+      await api.post('/usuarios/registrar/', {
+        username, first_name: nome, email, password
       })
       setSucesso('Conta criada! Faça login.')
       setAba('entrar')
-    } catch {
-      setErro('Não foi possível criar a conta.')
+    } catch (err) {
+      const dados = err.response?.data
+      if (dados && typeof dados === 'object') {
+        setErro(Object.values(dados).flat().join(' '))
+      } else {
+        setErro('Não foi possível criar a conta.')
+      }
     } finally {
       setLoading(false)
     }
@@ -159,6 +187,7 @@ export default function Login() {
                   style={{ borderColor: '#c6c5d4' }}
                   placeholder="Seu nome completo"
                   value={nome}
+                  maxLength={LIMITES.nome}
                   onChange={e => setNome(e.target.value)}
                   required
                 />
@@ -170,6 +199,7 @@ export default function Login() {
                   style={{ borderColor: '#c6c5d4' }}
                   placeholder="nome de usuário"
                   value={username}
+                  maxLength={LIMITES.username}
                   onChange={e => setUsername(e.target.value)}
                   required
                 />
@@ -180,8 +210,9 @@ export default function Login() {
                   className="w-full px-4 py-3 border rounded-lg text-sm outline-none"
                   style={{ borderColor: '#c6c5d4' }}
                   placeholder="seu@email.com"
-                  type="email"
+                  type="text"
                   value={email}
+                  maxLength={LIMITES.email}
                   onChange={e => setEmail(e.target.value)}
                   required
                 />
@@ -195,13 +226,14 @@ export default function Login() {
                     type={mostrarSenha ? 'text' : 'password'}
                     placeholder="••••••••"
                     value={password}
+                    maxLength={LIMITES.senha}
                     onChange={e => setPassword(e.target.value)}
-                    required
                   />
                   <button type="button" className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400" onClick={() => setMostrarSenha(!mostrarSenha)}>
                     {mostrarSenha ? '🙈' : '👁'}
                   </button>
                 </div>
+                <MedidorSenha senha={password} />
               </div>
               <button
                 type="submit"

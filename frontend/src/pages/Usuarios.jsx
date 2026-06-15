@@ -94,7 +94,7 @@ export default function Usuarios() {
   }
 
   return (
-    <div className="p-8 max-w-5xl mx-auto">
+    <div className="p-4 md:p-8 max-w-6xl mx-auto">
       <div className="flex items-center justify-between mb-6">
         <div>
           <h2 className="text-2xl font-bold" style={{ color: '#000441', fontFamily: 'Montserrat, sans-serif' }}>
@@ -112,8 +112,51 @@ export default function Usuarios() {
       {sucesso && <p className="text-sm text-green-700 bg-green-50 px-4 py-3 rounded-lg mb-4">{sucesso}</p>}
       {erro && !usuarioSelecionado && <p className="text-sm text-red-600 bg-red-50 px-4 py-3 rounded-lg mb-4">{erro}</p>}
 
-      <div className="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden">
-        <table className="w-full">
+      {/* MOBILE: cartões (um por usuário) */}
+      <div className="md:hidden space-y-3">
+        {usuarios.map(u => (
+          <div key={u.id} onClick={() => abrirUsuario(u)}
+            className="bg-white rounded-xl border border-gray-100 shadow-sm p-4 cursor-pointer active:bg-gray-50">
+            <div className="flex items-center gap-3 mb-3">
+              <div className="w-10 h-10 rounded-full flex items-center justify-center text-white text-sm font-bold flex-shrink-0"
+                style={{ background: '#000441' }}>
+                {(u.first_name?.[0] || u.username[0]).toUpperCase()}
+              </div>
+              <div className="min-w-0">
+                <p className="text-sm font-medium text-gray-800 truncate">{u.first_name} {u.last_name}</p>
+                <p className="text-xs text-gray-400 truncate">@{u.username}</p>
+              </div>
+            </div>
+            <div className="space-y-1.5 text-sm">
+              <div className="flex justify-between gap-2">
+                <span className="text-gray-400">E-mail</span>
+                <span className="text-gray-600 truncate text-right">{u.email || '—'}</span>
+              </div>
+              <div className="flex justify-between items-center gap-2">
+                <span className="text-gray-400">Perfil</span>
+                <span className={`text-xs font-semibold px-3 py-1 rounded-full ${PERFIL_CORES[u.perfil]}`}>
+                  {PERFIL_LABELS[u.perfil] || u.perfil}
+                </span>
+              </div>
+              <div className="flex justify-between items-center gap-2">
+                <span className="text-gray-400">Status</span>
+                <span className={`flex items-center gap-1.5 text-xs font-medium ${u.status ? 'text-green-600' : 'text-red-500'}`}>
+                  <span className={`w-2 h-2 rounded-full ${u.status ? 'bg-green-500' : 'bg-red-400'}`} />
+                  {u.status ? 'Ativo' : 'Inativo'}
+                </span>
+              </div>
+            </div>
+          </div>
+        ))}
+        {usuarios.length === 0 && (
+          <p className="text-center text-sm text-gray-400 py-10">Nenhum usuário encontrado.</p>
+        )}
+      </div>
+
+      {/* DESKTOP: tabela */}
+      <div className="hidden md:block bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden">
+        <div className="overflow-x-auto">
+<table className="w-full">
           <thead>
             <tr className="bg-gray-50 text-xs font-semibold text-gray-500 uppercase tracking-wider">
               <th className="px-6 py-3 text-left">Nome</th>
@@ -160,6 +203,7 @@ export default function Usuarios() {
             )}
           </tbody>
         </table>
+</div>
       </div>
 
       {/* Painel lateral do usuário selecionado */}
@@ -288,7 +332,7 @@ export default function Usuarios() {
         <Modal titulo="Novo Usuário" onClose={() => setModalNovo(false)}>
           {erro && <p className="text-sm text-red-600 bg-red-50 px-3 py-2 rounded-lg mb-4">{erro}</p>}
           <form onSubmit={handleNovo} className="space-y-4">
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div className="col-span-2">
                 <label className="block text-sm font-medium mb-1.5 text-gray-600">Username</label>
                 <input className="w-full px-4 py-2.5 border border-gray-200 rounded-lg text-sm outline-none focus:border-blue-400 transition-colors"

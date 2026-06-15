@@ -81,7 +81,7 @@ export default function Validacao() {
   }
 
   return (
-    <div className="p-8 max-w-xl mx-auto">
+    <div className="p-4 md:p-8 max-w-xl mx-auto">
       <div className="text-center mb-8">
         <div className="w-14 h-14 rounded-full flex items-center justify-center mx-auto mb-4" style={{ background: '#e6eff8' }}>
           <ShieldCheck size={28} style={{ color: '#000441' }} />

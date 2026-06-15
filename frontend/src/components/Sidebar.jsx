@@ -1,8 +1,9 @@
+import { useState } from 'react'
 import { Link, useNavigate, useLocation } from 'react-router-dom'
 import {
   LayoutDashboard, Users, Compass, CalendarCheck,
   AlertTriangle, DollarSign, BarChart2,
-  ShieldCheck, LogOut
+  ShieldCheck, LogOut, Menu, X
 } from 'lucide-react'
 import { useAuth } from '../hooks/useAuth'
 
@@ -26,7 +27,7 @@ const MENUS = {
   ],
   cliente: [
     { path: '/passeios', label: 'Passeios', icone: Compass },
-    { path: '/reservas', label: 'Minhas Reservas', icone: CalendarCheck },
+    { path: '/minhas-reservas', label: 'Minhas Reservas', icone: CalendarCheck },
   ],
 }
 
@@ -35,6 +36,7 @@ export default function Sidebar() {
   const location = useLocation()
   const { perfil, nome } = useAuth()
   const itens = MENUS[perfil] || MENUS.cliente
+  const [aberto, setAberto] = useState(false)
 
   function logout() {
     localStorage.removeItem('access')
@@ -42,15 +44,23 @@ export default function Sidebar() {
     navigate('/login')
   }
 
-  return (
-    <aside className="fixed top-0 left-0 h-screen w-56 flex flex-col" style={{ background: '#000441' }}>
-      <div className="px-5 py-6 border-b border-white/10">
-        <span className="block text-white font-bold text-base" style={{ fontFamily: 'Montserrat, sans-serif' }}>
-          Bússola PA
-        </span>
-        <span className="block text-xs mt-1 uppercase tracking-widest" style={{ color: '#7984e1' }}>
-          {perfil}
-        </span>
+  // O conteúdo do menu é o mesmo no desktop e no mobile (DRY).
+  const conteudo = (
+    <>
+      <div className="px-5 py-6 border-b border-white/10 flex items-center justify-between">
+        <div>
+          <span className="block text-white font-bold text-base" style={{ fontFamily: 'Montserrat, sans-serif' }}>
+            Bússola PA
+          </span>
+          <span className="block text-xs mt-1 uppercase tracking-widest" style={{ color: '#7984e1' }}>
+            {perfil}
+          </span>
+        </div>
+        {/* Botão de fechar — só aparece no mobile */}
+        <button onClick={() => setAberto(false)}
+          className="md:hidden text-white/70 hover:text-white cursor-pointer" aria-label="Fechar menu">
+          <X size={22} />
+        </button>
       </div>
 
       <nav className="flex-1 py-4 overflow-y-auto">
@@ -60,6 +70,7 @@ export default function Sidebar() {
             <Link
               key={path}
               to={path}
+              onClick={() => setAberto(false)}
               className="flex items-center gap-3 px-5 py-3 text-sm transition-colors"
               style={{
                 color: ativo ? '#fff' : '#bcc2ff',
@@ -85,6 +96,39 @@ export default function Sidebar() {
           Sair
         </button>
       </div>
-    </aside>
+    </>
+  )
+
+  return (
+    <>
+      {/* Barra superior — só no mobile. Tem o botão hambúrguer. */}
+      <header className="md:hidden fixed top-0 left-0 right-0 h-14 z-40 flex items-center px-4 gap-3"
+        style={{ background: '#000441' }}>
+        <button onClick={() => setAberto(true)} className="text-white cursor-pointer" aria-label="Abrir menu">
+          <Menu size={24} />
+        </button>
+        <span className="text-white font-bold text-base" style={{ fontFamily: 'Montserrat, sans-serif' }}>
+          Bússola PA
+        </span>
+      </header>
+
+      {/* Menu fixo — só no desktop (md pra cima) */}
+      <aside className="hidden md:flex fixed top-0 left-0 h-screen w-56 flex-col z-30"
+        style={{ background: '#000441' }}>
+        {conteudo}
+      </aside>
+
+      {/* Menu deslizante — só no mobile, quando aberto */}
+      {aberto && (
+        <>
+          {/* Fundo escuro: clicar fecha */}
+          <div className="md:hidden fixed inset-0 z-40 bg-black/50" onClick={() => setAberto(false)} />
+          <aside className="md:hidden fixed top-0 left-0 h-screen w-64 flex flex-col z-50"
+            style={{ background: '#000441' }}>
+            {conteudo}
+          </aside>
+        </>
+      )}
+    </>
   )
 }

@@ -26,24 +26,28 @@ export default function Dashboard() {
       const abertas = res.data.filter(o => o.status === 'aberta').length
       setMetricas(m => ({ ...m, ocorrencias: abertas }))
     })
+    api.get('/financeiro/').then(res => {
+      const receita = res.data.reduce((acc, f) => acc + parseFloat(f.valor_total || 0), 0)
+      setMetricas(m => ({ ...m, receita }))
+    })
   }, [])
 
   const cards = [
     { label: 'Reservas Ativas', valor: metricas.ativas, icone: CalendarCheck, cor: 'text-blue-600', bg: 'bg-blue-50' },
     { label: 'Concluídas', valor: metricas.concluidas, icone: TrendingUp, cor: 'text-green-600', bg: 'bg-green-50' },
     { label: 'Ocorrências Abertas', valor: metricas.ocorrencias, icone: AlertTriangle, cor: 'text-red-600', bg: 'bg-red-50', destaque: metricas.ocorrencias > 0 },
-    { label: 'Receita do Dia', valor: '—', icone: DollarSign, cor: 'text-teal-600', bg: 'bg-teal-50' },
+    { label: 'Receita Total', valor: `R$ ${(metricas.receita || 0).toFixed(2)}`, icone: DollarSign, cor: 'text-teal-600', bg: 'bg-teal-50' },
   ]
 
   return (
-    <div className="p-8 max-w-6xl mx-auto">
+    <div className="p-4 md:p-8 max-w-6xl mx-auto">
       <h2 className="text-2xl font-bold mb-1" style={{ color: '#000441', fontFamily: 'Montserrat, sans-serif' }}>
         Painel de Controle
       </h2>
       <p className="text-sm text-gray-500 mb-8">Visão consolidada para administração central - Paulo Afonso, Bahia.</p>
 
       {/* Cards */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
         {cards.map(({ label, valor, icone: Icone, cor, bg, destaque }) => (
           <div
             key={label}
@@ -73,7 +77,31 @@ export default function Dashboard() {
             Ver Todas
           </a>
         </div>
-        <table className="w-full">
+        {/* MOBILE: cartões */}
+        <div className="md:hidden p-4 space-y-3">
+          {reservas.map(r => (
+            <div key={r.id} className="border border-gray-100 rounded-lg p-3">
+              <div className="flex items-center justify-between mb-2">
+                <span className="text-sm font-bold" style={{ color: '#000441' }}>#BPA-{r.id}</span>
+                <span className={`text-xs font-semibold px-2.5 py-0.5 rounded-full ${STATUS_CORES[r.status]}`}>
+                  {r.status.replace('_', ' ').toUpperCase()}
+                </span>
+              </div>
+              <div className="space-y-1 text-sm">
+                <div className="flex justify-between gap-2"><span className="text-gray-400">Cliente</span><span className="text-gray-700 truncate text-right">{r.cliente_nome || r.cliente}</span></div>
+                <div className="flex justify-between gap-2"><span className="text-gray-400">Passeio</span><span className="text-gray-700 truncate text-right">{r.passeio_nome || r.passeio}</span></div>
+                <div className="flex justify-between gap-2"><span className="text-gray-400">Guia</span><span className="text-gray-700 truncate text-right">{r.guia_nome || r.guia_responsavel}</span></div>
+              </div>
+            </div>
+          ))}
+          {reservas.length === 0 && (
+            <p className="text-center text-sm text-gray-400 py-8">Nenhuma reserva cadastrada.</p>
+          )}
+        </div>
+
+        {/* DESKTOP: tabela */}
+        <div className="hidden md:block overflow-x-auto">
+<table className="w-full">
           <thead>
             <tr className="bg-gray-50 text-xs font-semibold text-gray-500 uppercase tracking-wider">
               <th className="px-6 py-3 text-left">ID</th>
@@ -106,6 +134,7 @@ export default function Dashboard() {
             )}
           </tbody>
         </table>
+</div>
       </div>
     </div>
   )

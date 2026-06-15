@@ -13,7 +13,13 @@ class Reserva(models.Model):
     ]
     cliente = models.ForeignKey(Cliente, on_delete=models.PROTECT)
     passeio = models.ForeignKey(Passeio, on_delete=models.PROTECT)
-    guia_responsavel = models.ForeignKey(Usuario, on_delete=models.PROTECT, related_name='reservas_responsavel')
+    # Pode ficar nulo enquanto a reserva é só uma SOLICITAÇÃO do cliente.
+    # Um guia assume a responsabilidade ao confirmar.
+    guia_responsavel = models.ForeignKey(
+        Usuario, on_delete=models.PROTECT,
+        related_name='reservas_responsavel',
+        null=True, blank=True,
+    )
     guias_apoio = models.ManyToManyField(Usuario, blank=True, related_name='reservas_apoio')
     data_reserva = models.DateField()
     horario_reserva = models.TimeField()
@@ -26,7 +32,7 @@ class Reserva(models.Model):
 
     def __str__(self):
         return f'#{self.id} - {self.cliente} - {self.passeio}'
-    
+
 class ReservaHistorico(models.Model):
     reserva = models.ForeignKey(Reserva, on_delete=models.CASCADE, related_name='historico')
     status_anterior = models.CharField(max_length=20)

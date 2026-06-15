@@ -60,6 +60,7 @@ INSTALLED_APPS = [
     'reservas',
     'ocorrencias',
     'financeiro',
+    'ia',
 ]
 
 MIDDLEWARE = [

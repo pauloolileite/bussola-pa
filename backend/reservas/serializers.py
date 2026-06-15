@@ -14,7 +14,7 @@ TRANSICOES_VALIDAS = {
 class ReservaSerializer(serializers.ModelSerializer):
     passeio_nome = serializers.CharField(source='passeio.nome', read_only=True)
     cliente_nome = serializers.CharField(source='cliente.nome', read_only=True)
-    guia_nome = serializers.CharField(source='guia_responsavel.get_full_name', read_only=True)
+    guia_nome = serializers.SerializerMethodField(read_only=True)
     # Lista somente-leitura com os nomes dos guias de apoio, para exibir na tela.
     # O campo guias_apoio (ids) continua existindo via __all__ para gravação.
     guias_apoio_nomes = serializers.SerializerMethodField(read_only=True)
@@ -28,6 +28,12 @@ class ReservaSerializer(serializers.ModelSerializer):
             {'id': g.id, 'nome': g.get_full_name() or g.username}
             for g in obj.guias_apoio.all()
         ]
+
+    def get_guia_nome(self, obj):
+        # Guia pode estar em aberto numa solicitação recém-criada pelo cliente.
+        if not obj.guia_responsavel:
+            return None
+        return obj.guia_responsavel.get_full_name() or obj.guia_responsavel.username
 
     def validate(self, data):
         cliente = data.get('cliente')
@@ -68,3 +74,25 @@ class ReservaHistoricoSerializer(serializers.ModelSerializer):
     class Meta:
         model = ReservaHistorico
         fields = '__all__'
+
+
+class SolicitacaoClienteSerializer(serializers.ModelSerializer):
+    """Solicitação feita pelo próprio cliente (UC02 / HU002 / RF06).
+    O cliente informa só passeio, data, horário e nº de turistas.
+    Guia, cliente e status são definidos pelo servidor — nunca pelo cliente."""
+    class Meta:
+        model = Reserva
+        fields = ['passeio', 'data_reserva', 'horario_reserva', 'quantidade_turistas', 'observacoes']
+
+    def validate_quantidade_turistas(self, valor):
+        if valor < 1:
+            raise serializers.ValidationError('Informe ao menos 1 turista.')
+        if valor > 100:
+            raise serializers.ValidationError('Quantidade de turistas acima do permitido.')
+        return valor
+
+    def validate_passeio(self, passeio):
+        # RN006: só passeios ativos recebem novas solicitações.
+        if not passeio.status:
+            raise serializers.ValidationError('Este passeio não está disponível para reserva.')
+        return passeio

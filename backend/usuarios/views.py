@@ -1,27 +1,44 @@
-from rest_framework import viewsets
+from rest_framework import viewsets, status
 from rest_framework.decorators import action
 from rest_framework.response import Response
+from rest_framework.permissions import AllowAny
 from core.permissions import IsAdmin, IsAdminOrGuia
 from .models import Usuario, Cliente
-from .serializers import UsuarioSerializer, UsuarioCriacaoSerializer, ClienteSerializer
+from .serializers import (
+    UsuarioSerializer, UsuarioCriacaoSerializer, ClienteSerializer,
+    RegistroClienteSerializer,
+)
 
 
 class UsuarioViewSet(viewsets.ModelViewSet):
     queryset = Usuario.objects.all()
 
     def get_permissions(self):
-        # Princípio do menor privilégio:
-        # - LISTAR/VER (GET): admin e guia. O guia precisa da lista de guias
-        #   para escolher responsável e apoio numa reserva (UC04/UC05).
-        # - CRIAR/EDITAR/EXCLUIR: somente admin (gestão de usuários é UC10).
+        # Auto-cadastro de cliente é público (qualquer visitante).
+        if self.action == 'registrar':
+            return [AllowAny()]
+        # Listar/ver: admin e guia. Criar/editar/excluir: só admin.
         if self.action in ('list', 'retrieve'):
             return [IsAdminOrGuia()]
         return [IsAdmin()]
 
     def get_serializer_class(self):
+        if self.action == 'registrar':
+            return RegistroClienteSerializer
         if self.action == 'create':
             return UsuarioCriacaoSerializer
         return UsuarioSerializer
+
+    @action(detail=False, methods=['post'], url_path='registrar')
+    def registrar(self, request):
+        """Endpoint público de auto-cadastro de cliente (tela de login)."""
+        serializer = RegistroClienteSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+        return Response(
+            {'mensagem': 'Conta criada com sucesso.'},
+            status=status.HTTP_201_CREATED,
+        )
 
     def partial_update(self, request, *args, **kwargs):
         kwargs['partial'] = True
@@ -33,13 +50,6 @@ class UsuarioViewSet(viewsets.ModelViewSet):
                 instance.ativar()
             return Response(UsuarioSerializer(instance).data)
         return self.update(request, *args, **kwargs)
-
-    @action(detail=False, methods=['post'], url_path='limpar-inativos',
-            permission_classes=[IsAdmin])
-    def limpar_inativos(self, request):
-        from django.core.management import call_command
-        call_command('limpar_usuarios')
-        return Response({'mensagem': 'Limpeza executada com sucesso.'})
 
 
 class ClienteViewSet(viewsets.ModelViewSet):
