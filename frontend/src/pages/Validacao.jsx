@@ -63,8 +63,9 @@ export default function Validacao() {
 
   async function validarEntrada() {
     if (!reserva) return
-    if (!['solicitada', 'confirmada'].includes(reserva.status)) {
-      setErro('Reserva não está apta para validação.')
+    // A guarita só valida reservas CONFIRMADAS pelo guia.
+    if (reserva.status !== 'confirmada') {
+      setErro('Reserva não está apta para validação. O guia precisa confirmar a reserva antes.')
       return
     }
     setLoading(true)
@@ -175,11 +176,11 @@ export default function Validacao() {
             </p>
           </div>
 
-          {reserva.status === 'em_andamento' ? (
+          {reserva.status === 'em_andamento' || reserva.status === 'concluida' ? (
             <div className="w-full py-3 bg-green-50 text-green-700 rounded-lg text-sm font-bold text-center">
               ✓ Passeio já validado
             </div>
-          ) : (
+          ) : reserva.status === 'confirmada' ? (
             <button
               onClick={validarEntrada}
               disabled={loading}
@@ -188,6 +189,10 @@ export default function Validacao() {
             >
               {loading ? 'Validando...' : '✓ VALIDAR ENTRADA'}
             </button>
+          ) : (
+            <div className="w-full py-3 bg-amber-50 text-amber-700 rounded-lg text-sm font-semibold text-center px-3">
+              Aguardando confirmação do guia. Só é possível validar reservas confirmadas.
+            </div>
           )}
         </div>
       )}

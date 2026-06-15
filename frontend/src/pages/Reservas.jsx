@@ -9,6 +9,7 @@ import 'dayjs/locale/pt-br'
 import { dialogSx, inputSx, COR_PRIMARIA, COR_SECUNDARIA, CORES } from '../utils/muiTheme'
 import api from '../api'
 import QRCodeReserva from '../components/QRCodeReserva'
+import SeletorGuiasApoio from '../components/SeletorGuiasApoio'
 
 const STATUS_CORES = {
   solicitada: 'bg-blue-100 text-blue-800',
@@ -33,6 +34,114 @@ const LABELS_TRANSICAO = {
   cancelada: 'Cancelar',
 }
 
+const FORM_VAZIO = {
+  cliente: '', passeio: '', guia_responsavel: '',
+  guias_apoio: [], quantidade_turistas: 1, observacoes: '',
+}
+
+/**
+ * Formulário de reserva, reutilizado nos modais de criar e editar.
+ *
+ * Definido FORA do componente Reservas de propósito: quando um componente é
+ * declarado dentro de outro, o React o recria a cada render e o campo de
+ * texto perde o foco a cada tecla. Mantê-lo fora corrige isso (e é mais limpo).
+ * Tudo de que precisa chega por props.
+ */
+function FormReserva({
+  formData, setFormData, data, setData, horario, setHorario,
+  onSubmit, onCancel, erroForm, loading, clientes, passeios, guias, onNovoCliente,
+}) {
+  return (
+    <form onSubmit={onSubmit} className="space-y-4">
+      {erroForm && (
+        <p className="text-sm px-3 py-2 rounded-lg" style={{ color: CORES.perigo, background: CORES.perigoBg }}>
+          {erroForm}
+        </p>
+      )}
+      <div className="grid grid-cols-2 gap-4">
+        <div>
+          <label className="block text-sm font-medium mb-1.5 text-gray-600">Cliente</label>
+          <div className="flex gap-2">
+            <select className="flex-1 px-4 py-2.5 border border-gray-200 rounded-lg text-sm outline-none cursor-pointer"
+              value={formData.cliente} onChange={e => setFormData({ ...formData, cliente: e.target.value })} required>
+              <option value="">Selecione...</option>
+              {clientes.map(c => <option key={c.id} value={c.id}>{c.nome}</option>)}
+            </select>
+            <button type="button" onClick={onNovoCliente}
+              className="w-10 h-10 rounded-lg flex items-center justify-center text-white transition-all active:scale-95 hover:opacity-90 cursor-pointer flex-shrink-0"
+              style={{ background: CORES.sucesso }}>
+              <Plus size={16} />
+            </button>
+          </div>
+        </div>
+        <div>
+          <label className="block text-sm font-medium mb-1.5 text-gray-600">Passeio</label>
+          <select className="w-full px-4 py-2.5 border border-gray-200 rounded-lg text-sm outline-none cursor-pointer"
+            value={formData.passeio} onChange={e => setFormData({ ...formData, passeio: e.target.value })} required>
+            <option value="">Selecione...</option>
+            {passeios.map(p => <option key={p.id} value={p.id}>{p.nome}</option>)}
+          </select>
+        </div>
+        <div>
+          <label className="block text-sm font-medium mb-1.5 text-gray-600">Guia Responsável</label>
+          <select className="w-full px-4 py-2.5 border border-gray-200 rounded-lg text-sm outline-none cursor-pointer"
+            value={formData.guia_responsavel} onChange={e => setFormData({ ...formData, guia_responsavel: e.target.value })} required>
+            <option value="">Selecione...</option>
+            {guias.map(g => (
+              <option key={g.id} value={g.id}>
+                {g.first_name && g.last_name ? `${g.first_name} ${g.last_name}` : g.username}
+              </option>
+            ))}
+          </select>
+        </div>
+        <div>
+          <label className="block text-sm font-medium mb-1.5 text-gray-600">Quantidade de Turistas</label>
+          <input type="number" min={1}
+            className="w-full px-4 py-2.5 border border-gray-200 rounded-lg text-sm outline-none"
+            value={formData.quantidade_turistas}
+            onChange={e => setFormData({ ...formData, quantidade_turistas: e.target.value })} required />
+        </div>
+        <div>
+          <label className="block text-sm font-medium mb-1.5 text-gray-600">Data da Reserva</label>
+          <MobileDatePicker value={data} onChange={setData} format="DD/MM/YYYY" disablePast
+            slotProps={{ textField: { sx: inputSx }, dialog: { sx: dialogSx } }} />
+        </div>
+        <div>
+          <label className="block text-sm font-medium mb-1.5 text-gray-600">Horário</label>
+          <MobileTimePicker value={horario} onChange={setHorario} ampm={false} views={['hours', 'minutes']}
+            slotProps={{ textField: { sx: inputSx }, dialog: { sx: dialogSx } }} />
+        </div>
+      </div>
+
+      {/* Seletor de guias de apoio (RN004 / UC05) */}
+      <SeletorGuiasApoio
+        guias={guias}
+        selecionados={formData.guias_apoio}
+        idResponsavel={formData.guia_responsavel}
+        onChange={novos => setFormData({ ...formData, guias_apoio: novos })}
+      />
+
+      <div>
+        <label className="block text-sm font-medium mb-1.5 text-gray-600">Observações</label>
+        <textarea className="w-full px-4 py-2.5 border border-gray-200 rounded-lg text-sm outline-none resize-none"
+          rows={3} placeholder="Informações adicionais..."
+          value={formData.observacoes} onChange={e => setFormData({ ...formData, observacoes: e.target.value })} />
+      </div>
+      <div className="flex gap-3 pt-2">
+        <button type="submit" disabled={loading}
+          className="flex-1 py-2.5 rounded-lg text-white text-sm font-semibold transition-all active:scale-95 hover:opacity-90 cursor-pointer"
+          style={{ background: CORES.sucesso, opacity: loading ? 0.7 : 1 }}>
+          {loading ? 'Salvando...' : 'Salvar'}
+        </button>
+        <button type="button" onClick={onCancel}
+          className="flex-1 py-2.5 rounded-lg text-sm font-medium border border-gray-200 text-gray-600 hover:bg-gray-50 transition-all active:scale-95 cursor-pointer">
+          Cancelar
+        </button>
+      </div>
+    </form>
+  )
+}
+
 export default function Reservas() {
   const [reservas, setReservas] = useState([])
   const [reservaSelecionada, setReservaSelecionada] = useState(null)
@@ -42,14 +151,8 @@ export default function Reservas() {
   const [clientes, setClientes] = useState([])
   const [passeios, setPasseios] = useState([])
   const [guias, setGuias] = useState([])
-  const [form, setForm] = useState({
-    cliente: '', passeio: '', guia_responsavel: '',
-    quantidade_turistas: 1, observacoes: ''
-  })
-  const [formEditar, setFormEditar] = useState({
-    cliente: '', passeio: '', guia_responsavel: '',
-    quantidade_turistas: 1, observacoes: ''
-  })
+  const [form, setForm] = useState({ ...FORM_VAZIO })
+  const [formEditar, setFormEditar] = useState({ ...FORM_VAZIO })
   const [dataReserva, setDataReserva] = useState(null)
   const [horarioReserva, setHorarioReserva] = useState(null)
   const [dataEditar, setDataEditar] = useState(null)
@@ -71,26 +174,18 @@ export default function Reservas() {
     api.get('/reservas/').then(res => setReservas(res.data))
   }
 
-  function abrirEditar() {
-  setFormEditar({
-    cliente: reservaSelecionada.cliente,
-    passeio: reservaSelecionada.passeio,
-    guia_responsavel: reservaSelecionada.guia_responsavel,
-    quantidade_turistas: reservaSelecionada.quantidade_turistas,
-    observacoes: reservaSelecionada.observacoes || '',
-  })
-  setDataEditar(dayjs(reservaSelecionada.data_reserva))
-  setHorarioEditar(dayjs(`2000-01-01T${reservaSelecionada.horario_reserva}`))
-  setErroForm('')
-  setMostrarEditar(true)
+  // Converte os ids de apoio (que podem vir como números do backend) em strings,
+  // para casar com os values dos <option>/chips no formulário.
+  function idsApoioComoTexto(reserva) {
+    return (reserva.guias_apoio || []).map(String)
   }
 
-  function confirmarEditar() {
-    setMostrarConfirmacao(false)
+  function abrirEditar() {
     setFormEditar({
       cliente: reservaSelecionada.cliente,
       passeio: reservaSelecionada.passeio,
       guia_responsavel: reservaSelecionada.guia_responsavel,
+      guias_apoio: idsApoioComoTexto(reservaSelecionada),
       quantidade_turistas: reservaSelecionada.quantidade_turistas,
       observacoes: reservaSelecionada.observacoes || '',
     })
@@ -110,6 +205,14 @@ export default function Reservas() {
     }
   }
 
+  function mensagemDeErro(err, padrao) {
+    const msg = err.response?.data
+    if (typeof msg === 'object' && msg !== null) {
+      return Object.values(msg).flat().join(' ')
+    }
+    return padrao
+  }
+
   async function handleSubmit(e) {
     e.preventDefault()
     setErroForm('')
@@ -120,44 +223,42 @@ export default function Reservas() {
       const horario_reserva = horarioReserva.format('HH:mm:ss')
       await api.post('/reservas/', { ...form, data_reserva, horario_reserva })
       setMostrarModal(false)
-      setForm({ cliente: '', passeio: '', guia_responsavel: '', quantidade_turistas: 1, observacoes: '' })
+      setForm({ ...FORM_VAZIO })
       setDataReserva(null)
       setHorarioReserva(null)
       carregarReservas()
     } catch (err) {
-      const msg = err.response?.data
-      setErroForm(typeof msg === 'object' ? Object.values(msg).flat().join(' ') : 'Erro ao cadastrar reserva.')
+      setErroForm(mensagemDeErro(err, 'Erro ao cadastrar reserva.'))
     } finally {
       setLoading(false)
     }
   }
 
-  async function handleEditar(e) {
-  e.preventDefault()
-  setMostrarConfirmacao(true)
-}
-
-async function confirmarEditar() {
-  setMostrarConfirmacao(false)
-  setErroForm('')
-  if (!dataEditar || !horarioEditar) { setErroForm('Preencha a data e o horário.'); return }
-  setLoading(true)
-  try {
-    const data_reserva = dataEditar.format('YYYY-MM-DD')
-    const horario_reserva = horarioEditar.format('HH:mm:ss')
-    const res = await api.patch(`/reservas/${reservaSelecionada.id}/`, {
-      ...formEditar, data_reserva, horario_reserva
-    })
-    setReservas(prev => prev.map(r => r.id === reservaSelecionada.id ? res.data : r))
-    setReservaSelecionada(res.data)
-    setMostrarEditar(false)
-  } catch (err) {
-    const msg = err.response?.data
-    setErroForm(typeof msg === 'object' ? Object.values(msg).flat().join(' ') : 'Erro ao editar reserva.')
-  } finally {
-    setLoading(false)
+  function handleEditar(e) {
+    e.preventDefault()
+    setMostrarConfirmacao(true)
   }
-}
+
+  async function confirmarEditar() {
+    setMostrarConfirmacao(false)
+    setErroForm('')
+    if (!dataEditar || !horarioEditar) { setErroForm('Preencha a data e o horário.'); return }
+    setLoading(true)
+    try {
+      const data_reserva = dataEditar.format('YYYY-MM-DD')
+      const horario_reserva = horarioEditar.format('HH:mm:ss')
+      const res = await api.patch(`/reservas/${reservaSelecionada.id}/`, {
+        ...formEditar, data_reserva, horario_reserva
+      })
+      setReservas(prev => prev.map(r => r.id === reservaSelecionada.id ? res.data : r))
+      setReservaSelecionada(res.data)
+      setMostrarEditar(false)
+    } catch (err) {
+      setErroForm(mensagemDeErro(err, 'Erro ao editar reserva.'))
+    } finally {
+      setLoading(false)
+    }
+  }
 
   async function salvarCliente(e) {
     e.preventDefault()
@@ -172,89 +273,6 @@ async function confirmarEditar() {
     }
   }
 
-  function FormReserva({ formData, setFormData, data, setData, horario, setHorario, onSubmit, onCancel }) {
-    return (
-      <form onSubmit={onSubmit} className="space-y-4">
-        {erroForm && (
-          <p className="text-sm px-3 py-2 rounded-lg" style={{ color: CORES.perigo, background: CORES.perigoBg }}>
-            {erroForm}
-          </p>
-        )}
-        <div className="grid grid-cols-2 gap-4">
-          <div>
-            <label className="block text-sm font-medium mb-1.5 text-gray-600">Cliente</label>
-            <div className="flex gap-2">
-              <select className="flex-1 px-4 py-2.5 border border-gray-200 rounded-lg text-sm outline-none cursor-pointer"
-                value={formData.cliente} onChange={e => setFormData({ ...formData, cliente: e.target.value })} required>
-                <option value="">Selecione...</option>
-                {clientes.map(c => <option key={c.id} value={c.id}>{c.nome}</option>)}
-              </select>
-              <button type="button" onClick={() => setModalCliente(true)}
-                className="w-10 h-10 rounded-lg flex items-center justify-center text-white transition-all active:scale-95 hover:opacity-90 cursor-pointer flex-shrink-0"
-                style={{ background: CORES.sucesso }}>
-                <Plus size={16} />
-              </button>
-            </div>
-          </div>
-          <div>
-            <label className="block text-sm font-medium mb-1.5 text-gray-600">Passeio</label>
-            <select className="w-full px-4 py-2.5 border border-gray-200 rounded-lg text-sm outline-none cursor-pointer"
-              value={formData.passeio} onChange={e => setFormData({ ...formData, passeio: e.target.value })} required>
-              <option value="">Selecione...</option>
-              {passeios.map(p => <option key={p.id} value={p.id}>{p.nome}</option>)}
-            </select>
-          </div>
-          <div>
-            <label className="block text-sm font-medium mb-1.5 text-gray-600">Guia Responsável</label>
-            <select className="w-full px-4 py-2.5 border border-gray-200 rounded-lg text-sm outline-none cursor-pointer"
-              value={formData.guia_responsavel} onChange={e => setFormData({ ...formData, guia_responsavel: e.target.value })} required>
-              <option value="">Selecione...</option>
-              {guias.map(g => (
-                <option key={g.id} value={g.id}>
-                  {g.first_name && g.last_name ? `${g.first_name} ${g.last_name}` : g.username}
-                </option>
-              ))}
-            </select>
-          </div>
-          <div>
-            <label className="block text-sm font-medium mb-1.5 text-gray-600">Quantidade de Turistas</label>
-            <input type="number" min={1}
-              className="w-full px-4 py-2.5 border border-gray-200 rounded-lg text-sm outline-none"
-              value={formData.quantidade_turistas}
-              onChange={e => setFormData({ ...formData, quantidade_turistas: e.target.value })} required />
-          </div>
-          <div>
-            <label className="block text-sm font-medium mb-1.5 text-gray-600">Data da Reserva</label>
-            <MobileDatePicker value={data} onChange={setData} format="DD/MM/YYYY" disablePast
-              slotProps={{ textField: { sx: inputSx }, dialog: { sx: dialogSx } }} />
-          </div>
-          <div>
-            <label className="block text-sm font-medium mb-1.5 text-gray-600">Horário</label>
-            <MobileTimePicker value={horario} onChange={setHorario} ampm={false} views={['hours', 'minutes']}
-              slotProps={{ textField: { sx: inputSx }, dialog: { sx: dialogSx } }} />
-          </div>
-        </div>
-        <div>
-          <label className="block text-sm font-medium mb-1.5 text-gray-600">Observações</label>
-          <textarea className="w-full px-4 py-2.5 border border-gray-200 rounded-lg text-sm outline-none resize-none"
-            rows={3} placeholder="Informações adicionais..."
-            value={formData.observacoes} onChange={e => setFormData({ ...formData, observacoes: e.target.value })} />
-        </div>
-        <div className="flex gap-3 pt-2">
-          <button type="submit" disabled={loading}
-            className="flex-1 py-2.5 rounded-lg text-white text-sm font-semibold transition-all active:scale-95 hover:opacity-90 cursor-pointer"
-            style={{ background: CORES.sucesso, opacity: loading ? 0.7 : 1 }}>
-            {loading ? 'Salvando...' : 'Salvar'}
-          </button>
-          <button type="button" onClick={onCancel}
-            className="flex-1 py-2.5 rounded-lg text-sm font-medium border border-gray-200 text-gray-600 hover:bg-gray-50 transition-all active:scale-95 cursor-pointer">
-            Cancelar
-          </button>
-        </div>
-      </form>
-    )
-  }
-
   return (
     <LocalizationProvider dateAdapter={AdapterDayjs} adapterLocale="pt-br">
       <div className="p-8 max-w-6xl mx-auto">
@@ -265,7 +283,7 @@ async function confirmarEditar() {
             </h2>
             <p className="text-sm text-gray-500 mt-1">{reservas.length} reservas encontradas</p>
           </div>
-          <button onClick={() => setMostrarModal(true)}
+          <button onClick={() => { setForm({ ...FORM_VAZIO }); setDataReserva(null); setHorarioReserva(null); setErroForm(''); setMostrarModal(true) }}
             className="flex items-center gap-2 px-4 py-2 rounded-lg text-white text-sm font-semibold transition-all active:scale-95 hover:opacity-90 cursor-pointer"
             style={{ background: COR_SECUNDARIA }}>
             <Plus size={16} /> Nova Reserva
@@ -381,6 +399,18 @@ async function confirmarEditar() {
                     {reservaSelecionada.status.replace('_', ' ')}
                   </span>
                 </div>
+                {reservaSelecionada.guias_apoio_nomes?.length > 0 && (
+                  <div className="border-t border-gray-100 pt-2">
+                    <span className="text-gray-400 block mb-1">Guias de apoio</span>
+                    <div className="flex flex-wrap gap-1">
+                      {reservaSelecionada.guias_apoio_nomes.map(g => (
+                        <span key={g.id} className="text-xs px-2 py-0.5 rounded-full bg-blue-50 text-blue-700 font-medium">
+                          {g.nome}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+                )}
               </div>
             </div>
           )}
@@ -442,6 +472,12 @@ async function confirmarEditar() {
                 setHorario={setHorarioEditar}
                 onSubmit={handleEditar}
                 onCancel={() => setMostrarEditar(false)}
+                erroForm={erroForm}
+                loading={loading}
+                clientes={clientes}
+                passeios={passeios}
+                guias={guias}
+                onNovoCliente={() => setModalCliente(true)}
               />
             </div>
           </div>
@@ -474,6 +510,12 @@ async function confirmarEditar() {
                 setHorario={setHorarioReserva}
                 onSubmit={handleSubmit}
                 onCancel={() => { setMostrarModal(false); setErroForm('') }}
+                erroForm={erroForm}
+                loading={loading}
+                clientes={clientes}
+                passeios={passeios}
+                guias={guias}
+                onNovoCliente={() => setModalCliente(true)}
               />
             </div>
           </div>
@@ -484,7 +526,7 @@ async function confirmarEditar() {
       {modalCliente && (
         <div className="fixed inset-0 z-[60] flex items-center justify-center" style={{ background: 'rgba(0,0,0,0.5)' }}>
           <div className="bg-white rounded-2xl shadow-2xl w-full max-w-sm mx-4 overflow-hidden">
-            <div className="flex items-abrircenter justify-between px-6 py-4 border-b border-gray-100">
+            <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100">
               <h3 className="font-bold text-base" style={{ color: COR_PRIMARIA }}>Novo Cliente</h3>
               <button onClick={() => setModalCliente(false)}
                 className="w-8 h-8 rounded-lg flex items-center justify-center text-gray-400 hover:bg-gray-100 cursor-pointer transition-colors">

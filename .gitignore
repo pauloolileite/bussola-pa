@@ -1,13 +1,17 @@
-cat > .gitignore << 'EOF'
 # Python
 venv/
+.venv/
 __pycache__/
 *.pyc
 *.pyo
+
+# Segredos
 .env
+backend/.env
 
 # Django
 backend/db.sqlite3
+backend/media/
 
 # Node
 frontend/node_modules/
@@ -15,4 +19,3 @@ frontend/dist/
 
 # VS Code
 .vscode/
-EOF

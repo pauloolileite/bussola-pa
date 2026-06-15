@@ -214,7 +214,7 @@ export default function Login() {
             </form>
           )}
 
-          <p className="text-center text-sm text-gray-400 mt-8">© 2024 Bússola PA. Todos os direitos reservados.</p>
+          <p className="text-center text-sm text-gray-400 mt-8">© 2026 Bússola PA. Todos os direitos reservados.</p>
         </div>
       </div>
     </div>

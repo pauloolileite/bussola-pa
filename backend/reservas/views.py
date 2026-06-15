@@ -1,6 +1,7 @@
 from rest_framework import viewsets, status
 from rest_framework.decorators import action
 from rest_framework.response import Response
+from django.db.models import Q
 from core.permissions import IsAdminOrGuia, IsAdminOrParceiro
 from .models import Reserva, ReservaHistorico
 from .serializers import ReservaSerializer, AtualizarStatusSerializer, ReservaHistoricoSerializer
@@ -14,7 +15,12 @@ class ReservaViewSet(viewsets.ModelViewSet):
         user = self.request.user
         if user.perfil == 'admin':
             return Reserva.objects.all()
-        return Reserva.objects.filter(guia_responsavel=user)
+        # CORRIGIDO: o guia agora vê as reservas onde é responsável
+        # OU onde foi vinculado como guia de apoio (RN004 / UC05).
+        # .distinct() evita reservas duplicadas quando ambos baterem.
+        return Reserva.objects.filter(
+            Q(guia_responsavel=user) | Q(guias_apoio=user)
+        ).distinct()
 
     def get_permissions(self):
         if self.action in ['buscar_por_qr', 'validar_qr']:
@@ -56,9 +62,13 @@ class ReservaViewSet(viewsets.ModelViewSet):
         except Reserva.DoesNotExist:
             return Response({'erro': 'Reserva não encontrada.'}, status=status.HTTP_404_NOT_FOUND)
 
-        if reserva.status not in ['solicitada', 'confirmada']:
+        # A guarita só valida reservas que o guia já CONFIRMOU.
+        # Fluxo correto: solicitada -> confirmada -> (guarita) em_andamento -> concluida.
+        # Isso respeita a máquina de estados (antes pulava de solicitada direto
+        # para em_andamento, contradizendo a regra de transições).
+        if reserva.status != 'confirmada':
             return Response(
-                {'erro': 'Reserva não está apta para validação.'},
+                {'erro': 'Reserva não está apta para validação. É necessário que o guia confirme a reserva antes.'},
                 status=status.HTTP_400_BAD_REQUEST
             )
 

@@ -8,7 +8,15 @@ from .serializers import UsuarioSerializer, UsuarioCriacaoSerializer, ClienteSer
 
 class UsuarioViewSet(viewsets.ModelViewSet):
     queryset = Usuario.objects.all()
-    permission_classes = [IsAdmin]
+
+    def get_permissions(self):
+        # Princípio do menor privilégio:
+        # - LISTAR/VER (GET): admin e guia. O guia precisa da lista de guias
+        #   para escolher responsável e apoio numa reserva (UC04/UC05).
+        # - CRIAR/EDITAR/EXCLUIR: somente admin (gestão de usuários é UC10).
+        if self.action in ('list', 'retrieve'):
+            return [IsAdminOrGuia()]
+        return [IsAdmin()]
 
     def get_serializer_class(self):
         if self.action == 'create':
