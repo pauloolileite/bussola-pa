@@ -85,10 +85,7 @@ Mantenha respostas objetivas, no máximo 4 parágrafos curtos. Use emojis com mo
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
 def chat_ia(request):
-    """
-    Endpoint: POST /api/ia/chat/  (requer usuário autenticado)
-    Body: { "messages": [{"role": "user", "content": "..."}] }
-    """
+
     try:
         messages = request.data.get('messages', [])
         if not messages:
@@ -112,8 +109,7 @@ def chat_ia(request):
             headers={
                 'Content-Type': 'application/json',
                 'Authorization': f'Bearer {api_key}',
-                # User-Agent de navegador: a Cloudflare que protege a Groq
-                # bloqueia requisições "sem navegador" (erro 1010) sem isto.
+
                 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
             },
         )
@@ -124,8 +120,7 @@ def chat_ia(request):
             return Response({'resposta': resposta})
 
     except urllib.error.HTTPError as e:
-        # Mostra no terminal exatamente o que a Groq respondeu (chave inválida,
-        # modelo indisponível, etc.) para facilitar o diagnóstico.
+
         try:
             detalhe = e.read().decode('utf-8')
         except Exception:
@@ -133,7 +128,6 @@ def chat_ia(request):
         print(f'[IA] Groq respondeu erro {e.code}: {detalhe}')
         return Response({'error': f'Erro na API da Groq ({e.code}). Veja o terminal do backend.'}, status=502)
     except urllib.error.URLError as e:
-        # Falha de rede (ex.: api.groq.com bloqueado pela rede/firewall).
         print(f'[IA] Falha de conexao com a Groq: {e.reason}')
         return Response({'error': f'Não foi possível conectar à Groq: {e.reason}'}, status=502)
     except Exception as e:

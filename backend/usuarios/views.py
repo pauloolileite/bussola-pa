@@ -14,10 +14,8 @@ class UsuarioViewSet(viewsets.ModelViewSet):
     queryset = Usuario.objects.all()
 
     def get_permissions(self):
-        # Auto-cadastro de cliente é público (qualquer visitante).
         if self.action == 'registrar':
             return [AllowAny()]
-        # Listar/ver: admin e guia. Criar/editar/excluir: só admin.
         if self.action in ('list', 'retrieve'):
             return [IsAdminOrGuia()]
         return [IsAdmin()]
@@ -31,7 +29,6 @@ class UsuarioViewSet(viewsets.ModelViewSet):
 
     @action(detail=False, methods=['post'], url_path='registrar')
     def registrar(self, request):
-        """Endpoint público de auto-cadastro de cliente (tela de login)."""
         serializer = RegistroClienteSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         serializer.save()

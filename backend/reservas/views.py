@@ -21,9 +21,7 @@ class ReservaViewSet(viewsets.ModelViewSet):
         if user.perfil == 'admin':
             return Reserva.objects.all()
         if user.perfil == 'cliente':
-            # O cliente vê apenas as próprias reservas (RF07).
             return Reserva.objects.filter(cliente__usuario=user)
-        # O guia vê as reservas onde é responsável OU apoio (RN004 / UC05).
         return Reserva.objects.filter(
             Q(guia_responsavel=user) | Q(guias_apoio=user)
         ).distinct()
@@ -32,7 +30,6 @@ class ReservaViewSet(viewsets.ModelViewSet):
         if self.action in ['buscar_por_qr', 'validar_qr']:
             return [IsAdminOrParceiro()]
         if self.action in ['solicitar', 'list', 'retrieve']:
-            # Cliente pode solicitar e ver as próprias; guia/admin também acessam.
             return [IsAuthenticated()]
         return super().get_permissions()
 
@@ -41,7 +38,7 @@ class ReservaViewSet(viewsets.ModelViewSet):
         reserva = self.get_object()
         serializer = AtualizarStatusSerializer(
             data=request.data,
-            context={'status_atual': reserva.status}
+            context={'status_atual': reserva.status, 'perfil': request.user.perfil}
         )
         serializer.is_valid(raise_exception=True)
         status_anterior = reserva.status
@@ -54,7 +51,6 @@ class ReservaViewSet(viewsets.ModelViewSet):
             usuario=request.user,
             observacao=serializer.validated_data.get('observacao', '')
         )
-        # Quando a reserva é concluída, gera o registro financeiro (regra de negócio).
         if reserva.status == 'concluida':
             gerar_financeiro_da_reserva(reserva)
         return Response(ReservaSerializer(reserva).data)
@@ -74,10 +70,6 @@ class ReservaViewSet(viewsets.ModelViewSet):
         except Reserva.DoesNotExist:
             return Response({'erro': 'Reserva não encontrada.'}, status=status.HTTP_404_NOT_FOUND)
 
-        # A guarita só valida reservas que o guia já CONFIRMOU.
-        # Fluxo correto: solicitada -> confirmada -> (guarita) em_andamento -> concluida.
-        # Isso respeita a máquina de estados (antes pulava de solicitada direto
-        # para em_andamento, contradizendo a regra de transições).
         if reserva.status != 'confirmada':
             return Response(
                 {'erro': 'Reserva não está apta para validação. É necessário que o guia confirme a reserva antes.'},
@@ -100,8 +92,7 @@ class ReservaViewSet(viewsets.ModelViewSet):
     @action(detail=False, methods=['post'], url_path='solicitar',
             permission_classes=[IsAuthenticated])
     def solicitar(self, request):
-        """Solicitação feita pelo próprio cliente (UC02 / HU002).
-        Servidor define cliente, status='solicitada' e deixa guia em aberto."""
+
         if request.user.perfil != 'cliente':
             return Response(
                 {'erro': 'Apenas clientes podem solicitar passeios por aqui.'},
@@ -116,7 +107,6 @@ class ReservaViewSet(viewsets.ModelViewSet):
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
-        # RN002: no máximo 3 reservas ativas por cliente.
         ativas = Reserva.objects.filter(
             cliente=cliente,
             status__in=['solicitada', 'confirmada', 'em_andamento'],
@@ -129,7 +119,7 @@ class ReservaViewSet(viewsets.ModelViewSet):
 
         serializer = SolicitacaoClienteSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
-        # Servidor controla cliente e status; guia fica nulo até a confirmação.
+
         reserva = serializer.save(
             cliente=cliente,
             status='solicitada',
@@ -147,8 +137,7 @@ class ReservaViewSet(viewsets.ModelViewSet):
     @action(detail=False, methods=['get'], url_path='relatorio',
             permission_classes=[IsAdmin])
     def relatorio(self, request):
-        """Relatório gerencial (UC14 / RN011). Apenas admin.
-        Filtro opcional: ?inicio=YYYY-MM-DD&fim=YYYY-MM-DD"""
+
         reservas = Reserva.objects.all()
         inicio = request.query_params.get('inicio')
         fim = request.query_params.get('fim')

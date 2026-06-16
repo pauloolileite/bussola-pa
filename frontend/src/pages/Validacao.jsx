@@ -63,7 +63,7 @@ export default function Validacao() {
 
   async function validarEntrada() {
     if (!reserva) return
-    // A guarita só valida reservas CONFIRMADAS pelo guia.
+
     if (reserva.status !== 'confirmada') {
       setErro('Reserva não está apta para validação. O guia precisa confirmar a reserva antes.')
       return

@@ -20,11 +20,6 @@ const STATUS_LABEL = {
   cancelada: 'Cancelada',
 }
 
-/**
- * Tela do CLIENTE: lista somente leitura das próprias reservas (RF07).
- * Separada da tela de Reservas do guia/admin (que tem cadastro, seletor de
- * guia, etc.) para manter cada tela com uma responsabilidade só.
- */
 export default function MinhasReservas() {
   const [reservas, setReservas] = useState([])
   const [carregando, setCarregando] = useState(true)

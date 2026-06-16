@@ -1,7 +1,4 @@
-// Regras de validação reaproveitadas pelos formulários.
-// Centralizar aqui evita repetir lógica em cada tela.
 
-// Limites de tamanho (batem com os do backend).
 export const LIMITES = {
   nome: 200,
   username: 150,
@@ -14,11 +11,10 @@ export const LIMITES = {
 }
 
 export function emailValido(email) {
-  if (!email) return true // email pode ser opcional em alguns formulários
+  if (!email) return true
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)
 }
 
-// Mantém só dígitos e formata como (75) 99999-9999
 export function formatarTelefone(valor) {
   const d = (valor || '').replace(/\D/g, '').slice(0, 11)
   if (d.length <= 2) return d
@@ -33,7 +29,6 @@ export function telefoneValido(valor) {
   return d.length === 10 || d.length === 11
 }
 
-// Força da senha: retorna { nivel: 0..4, texto, cor }
 export function forcaSenha(senha) {
   let pontos = 0
   if (senha.length >= 6) pontos++

@@ -56,7 +56,6 @@ export default function Login() {
   async function handleCriarConta(e) {
     e.preventDefault()
     setErro('')
-    // Validações de interface antes de enviar (mensagens claras em pt-BR).
     if (nome.trim().length < 2) { setErro('Informe seu nome completo.'); return }
     if (username.trim().length < 3) { setErro('O usuário deve ter ao menos 3 caracteres.'); return }
     if (!emailValido(email)) { setErro('Informe um e-mail válido.'); return }
@@ -92,10 +91,10 @@ export default function Login() {
         <div className="relative z-10">
           <img src="/logo.svg" alt="Bússola PA" className="w-24 h-24 mb-6" />
           <h1 className="text-white text-4xl font-bold mb-3" style={{ fontFamily: 'Montserrat, sans-serif' }}>
-            Explore o Inexplorado
+            Explore o Inesquecível!
           </h1>
           <p className="text-white/70 text-base leading-relaxed max-w-sm">
-            O seu guia definitivo para as aventuras mais autênticas na região de Paulo Afonso. Navegue com precisão e segurança.
+            O seu guia definitivo para as aventuras mais autênticas de Paulo Afonso e região. Navegue com precisão e segurança.
           </p>
         </div>
         <p className="relative z-10 text-white/40 text-xs mt-12 uppercase tracking-widest">Bússola PA</p>
@@ -140,7 +139,7 @@ export default function Login() {
                 <input
                   className="w-full px-4 py-3 border rounded-lg text-sm outline-none"
                   style={{ borderColor: '#c6c5d4' }}
-                  placeholder="seu usuário"
+                  placeholder="Seu usuário"
                   value={username}
                   onChange={e => setUsername(e.target.value)}
                   required
@@ -149,7 +148,6 @@ export default function Login() {
               <div>
                 <div className="flex justify-between mb-1">
                   <label className="text-sm font-medium" style={{ color: '#454652' }}>Senha</label>
-                  <span className="text-xs font-medium cursor-pointer" style={{ color: '#000441' }}>Esqueci minha senha</span>
                 </div>
                 <div className="relative">
                   <input
@@ -197,7 +195,7 @@ export default function Login() {
                 <input
                   className="w-full px-4 py-3 border rounded-lg text-sm outline-none"
                   style={{ borderColor: '#c6c5d4' }}
-                  placeholder="nome de usuário"
+                  placeholder="Nome de usuário"
                   value={username}
                   maxLength={LIMITES.username}
                   onChange={e => setUsername(e.target.value)}

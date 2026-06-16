@@ -112,7 +112,7 @@ export default function Usuarios() {
       {sucesso && <p className="text-sm text-green-700 bg-green-50 px-4 py-3 rounded-lg mb-4">{sucesso}</p>}
       {erro && !usuarioSelecionado && <p className="text-sm text-red-600 bg-red-50 px-4 py-3 rounded-lg mb-4">{erro}</p>}
 
-      {/* MOBILE: cartões (um por usuário) */}
+      {/* MOBILE: cartões */}
       <div className="md:hidden space-y-3">
         {usuarios.map(u => (
           <div key={u.id} onClick={() => abrirUsuario(u)}

@@ -14,7 +14,7 @@ import MinhasReservas from './pages/MinhasReservas'
 import { lerSessao } from './hooks/useAuth'
 import AssistenteIA from './components/AssistenteIA'
 
-// Tela inicial de cada perfil (para onde mandar quando o acesso é negado).
+// Tela inicial de cada perfil.
 const HOME_POR_PERFIL = {
   admin: '/dashboard',
   guia: '/reservas',
@@ -22,12 +22,6 @@ const HOME_POR_PERFIL = {
   cliente: '/passeios',
 }
 
-/**
- * Guard de rota. Checa, nesta ordem:
- *  1) Sessão válida (token existe E não expirou). Senão -> /login.
- *  2) Perfil autorizado para a rota (se 'perfis' for informado).
- *     Se não for autorizado, manda para a tela inicial do próprio perfil.
- */
 function RotaProtegida({ children, perfis }) {
   const sessao = lerSessao()
   if (!sessao) return <Navigate to="/login" replace />
@@ -64,16 +58,16 @@ export default function App() {
           <Route path="/ocorrencias" element={<RotaProtegida perfis={['admin', 'guia']}><Ocorrencias /></RotaProtegida>} />
           <Route path="/financeiro" element={<RotaProtegida perfis={['admin', 'guia']}><Financeiro /></RotaProtegida>} />
 
-          {/* Cliente: suas próprias reservas (somente leitura) */}
+          {/* Cliente */}
           <Route path="/minhas-reservas" element={<RotaProtegida perfis={['cliente']}><MinhasReservas /></RotaProtegida>} />
 
-          {/* Passeios: todos os perfis logados podem ver */}
+          {/* Passeios */}
           <Route path="/passeios" element={<RotaProtegida><Passeios /></RotaProtegida>} />
 
-          {/* Só parceiro operacional (e admin para conferência) */}
+          {/* Parceiro operacional (e admin para conferência) */}
           <Route path="/validacao" element={<RotaProtegida perfis={['admin', 'parceiro']}><Validacao /></RotaProtegida>} />
 
-          {/* Qualquer outra rota: manda para a tela inicial do perfil (ou login). */}
+          {/* Qualquer outra rota */}
           <Route path="*" element={<RedirecionarInicio />} />
         </Routes>
       </main>
@@ -81,7 +75,7 @@ export default function App() {
   )
 }
 
-// Redireciona para a tela certa conforme o perfil (ou login se não autenticado).
+// Redireciona para a tela certa conforme o perfil.
 function RedirecionarInicio() {
   const sessao = lerSessao()
   if (!sessao) return <Navigate to="/login" replace />

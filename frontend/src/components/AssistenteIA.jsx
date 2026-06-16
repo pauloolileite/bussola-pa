@@ -59,7 +59,6 @@ export default function AssistenteIA() {
 
   function renderMensagem(msg, idx) {
     const isBot = msg.role === 'assistant'
-    // Renderiza markdown simples (bold, quebras de linha)
     const html = msg.content
       .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
       .replace(/\n/g, '<br/>')

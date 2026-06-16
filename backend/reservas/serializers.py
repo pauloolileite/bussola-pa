@@ -2,6 +2,9 @@ from rest_framework import serializers
 from .models import Reserva, ReservaHistorico
 from usuarios.models import Usuario
 
+
+STATUS_RESTRITOS_AO_ADMIN = {'em_andamento', 'concluida'}
+
 TRANSICOES_VALIDAS = {
     'solicitada': ['confirmada', 'cancelada'],
     'confirmada': ['em_andamento', 'cancelada'],
@@ -15,8 +18,6 @@ class ReservaSerializer(serializers.ModelSerializer):
     passeio_nome = serializers.CharField(source='passeio.nome', read_only=True)
     cliente_nome = serializers.CharField(source='cliente.nome', read_only=True)
     guia_nome = serializers.SerializerMethodField(read_only=True)
-    # Lista somente-leitura com os nomes dos guias de apoio, para exibir na tela.
-    # O campo guias_apoio (ids) continua existindo via __all__ para gravação.
     guias_apoio_nomes = serializers.SerializerMethodField(read_only=True)
 
     class Meta:
@@ -30,7 +31,6 @@ class ReservaSerializer(serializers.ModelSerializer):
         ]
 
     def get_guia_nome(self, obj):
-        # Guia pode estar em aberto numa solicitação recém-criada pelo cliente.
         if not obj.guia_responsavel:
             return None
         return obj.guia_responsavel.get_full_name() or obj.guia_responsavel.username
@@ -48,7 +48,6 @@ class ReservaSerializer(serializers.ModelSerializer):
         if not data.get('guia_responsavel'):
             raise serializers.ValidationError('Guia responsável é obrigatório. (RN003)')
 
-        # RN004: um guia de apoio não pode ser o mesmo que o guia responsável.
         responsavel = data.get('guia_responsavel') or getattr(instance, 'guia_responsavel', None)
         apoios = data.get('guias_apoio')
         if apoios and responsavel and responsavel in apoios:
@@ -67,6 +66,12 @@ class AtualizarStatusSerializer(serializers.Serializer):
         permitidos = TRANSICOES_VALIDAS.get(status_atual, [])
         if novo_status not in permitidos:
             raise serializers.ValidationError(f'Transição inválida: {status_atual} → {novo_status}. (MSG016)')
+        
+        perfil = self.context.get('perfil')
+        if novo_status in STATUS_RESTRITOS_AO_ADMIN and perfil != 'admin':
+            raise serializers.ValidationError(
+                'Apenas a administração pode realizar esta ação na reserva.'
+            )
         return novo_status
 
 
@@ -77,9 +82,7 @@ class ReservaHistoricoSerializer(serializers.ModelSerializer):
 
 
 class SolicitacaoClienteSerializer(serializers.ModelSerializer):
-    """Solicitação feita pelo próprio cliente (UC02 / HU002 / RF06).
-    O cliente informa só passeio, data, horário e nº de turistas.
-    Guia, cliente e status são definidos pelo servidor — nunca pelo cliente."""
+
     class Meta:
         model = Reserva
         fields = ['passeio', 'data_reserva', 'horario_reserva', 'quantidade_turistas', 'observacoes']
@@ -92,7 +95,6 @@ class SolicitacaoClienteSerializer(serializers.ModelSerializer):
         return valor
 
     def validate_passeio(self, passeio):
-        # RN006: só passeios ativos recebem novas solicitações.
         if not passeio.status:
             raise serializers.ValidationError('Este passeio não está disponível para reserva.')
         return passeio

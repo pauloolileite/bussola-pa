@@ -10,6 +10,7 @@ import { dialogSx, inputSx, COR_PRIMARIA, COR_SECUNDARIA, CORES } from '../utils
 import api from '../api'
 import QRCodeReserva from '../components/QRCodeReserva'
 import SeletorGuiasApoio from '../components/SeletorGuiasApoio'
+import { useAuth } from '../hooks/useAuth'
 
 const STATUS_CORES = {
   solicitada: 'bg-blue-100 text-blue-800',
@@ -27,6 +28,8 @@ const TRANSICOES = {
   cancelada: [],
 }
 
+const STATUS_RESTRITOS_AO_ADMIN = ['em_andamento', 'concluida']
+
 const LABELS_TRANSICAO = {
   confirmada: 'Confirmar',
   em_andamento: 'Iniciar',
@@ -39,14 +42,7 @@ const FORM_VAZIO = {
   guias_apoio: [], quantidade_turistas: 1, observacoes: '',
 }
 
-/**
- * Formulário de reserva, reutilizado nos modais de criar e editar.
- *
- * Definido FORA do componente Reservas de propósito: quando um componente é
- * declarado dentro de outro, o React o recria a cada render e o campo de
- * texto perde o foco a cada tecla. Mantê-lo fora corrige isso (e é mais limpo).
- * Tudo de que precisa chega por props.
- */
+
 function FormReserva({
   formData, setFormData, data, setData, horario, setHorario,
   onSubmit, onCancel, erroForm, loading, clientes, passeios, guias, onNovoCliente,
@@ -113,7 +109,7 @@ function FormReserva({
         </div>
       </div>
 
-      {/* Seletor de guias de apoio (RN004 / UC05) */}
+      {/* Seletor de guias de apoio */}
       <SeletorGuiasApoio
         guias={guias}
         selecionados={formData.guias_apoio}
@@ -143,6 +139,15 @@ function FormReserva({
 }
 
 export default function Reservas() {
+  const { isAdmin } = useAuth()
+
+  // Transições visíveis conforme o perfil: o guia não vê 'Iniciar' nem 'Concluir'.
+  function transicoesVisiveis(status) {
+    const todas = TRANSICOES[status] || []
+    if (isAdmin) return todas
+    return todas.filter(s => !STATUS_RESTRITOS_AO_ADMIN.includes(s))
+  }
+
   const [reservas, setReservas] = useState([])
   const [reservaSelecionada, setReservaSelecionada] = useState(null)
   const [mostrarModal, setMostrarModal] = useState(false)
@@ -181,8 +186,6 @@ export default function Reservas() {
     api.get('/reservas/').then(res => setReservas(res.data))
   }
 
-  // Converte os ids de apoio (que podem vir como números do backend) em strings,
-  // para casar com os values dos <option>/chips no formulário.
   function idsApoioComoTexto(reserva) {
     return (reserva.guias_apoio || []).map(String)
   }
@@ -323,9 +326,9 @@ export default function Reservas() {
                     <div className="flex justify-between gap-2"><span className="text-gray-400">Data</span><span className="text-gray-500">{r.data_reserva}</span></div>
                     <div className="flex justify-between gap-2"><span className="text-gray-400">Turistas</span><span className="text-gray-700">{r.quantidade_turistas}</span></div>
                   </div>
-                  {TRANSICOES[r.status]?.length > 0 && (
+                  {transicoesVisiveis(r.status).length > 0 && (
                     <div className="flex gap-1 flex-wrap">
-                      {TRANSICOES[r.status].map(s => (
+                      {transicoesVisiveis(r.status).map(s => (
                         <button key={s}
                           onClick={e => { e.stopPropagation(); atualizarStatus(r.id, s) }}
                           className="text-xs px-3 py-1.5 rounded font-medium active:scale-95 cursor-pointer text-white"
@@ -377,7 +380,7 @@ export default function Reservas() {
                     </td>
                     <td className="px-5 py-4">
                       <div className="flex gap-1 flex-wrap">
-                        {TRANSICOES[r.status]?.map(s => (
+                        {transicoesVisiveis(r.status).map(s => (
                           <button key={s}
                             onClick={e => { e.stopPropagation(); atualizarStatus(r.id, s) }}
                             className="text-xs px-2 py-1 rounded font-medium transition-all active:scale-95 hover:opacity-80 cursor-pointer text-white"
@@ -428,7 +431,7 @@ export default function Reservas() {
               <p className="text-xs text-gray-500 text-center leading-relaxed mb-3">
                 Apresente na guarita para validar a entrada.
               </p>
-              {/* Código UUID copiável (alternativa ao escaneamento do QR) */}
+
               <div className="mb-4">
                 <p className="text-[10px] uppercase tracking-wider text-gray-400 mb-1">Código da reserva</p>
                 <div className="flex items-center gap-1.5">

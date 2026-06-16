@@ -1,9 +1,5 @@
 import { useMemo } from 'react'
 
-/**
- * Lê o token salvo e devolve seus dados — MAS só se ainda for válido.
- * Se o token estiver vencido (campo exp), trata como não autenticado.
- */
 export function lerSessao() {
   try {
     const token = localStorage.getItem('access')

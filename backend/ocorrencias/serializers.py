@@ -1,21 +1,18 @@
 from rest_framework import serializers
 from .models import Ocorrencia
 
-# Tipos de arquivo aceitos como anexo de ocorrência (RNF13).
 EXTENSOES_PERMITIDAS = ('.jpg', '.jpeg', '.png', '.pdf')
 TAMANHO_MAXIMO_MB = 10
-
 
 class OcorrenciaSerializer(serializers.ModelSerializer):
     class Meta:
         model = Ocorrencia
         fields = '__all__'
-        # O usuário dono é definido pelo servidor (perform_create), nunca pelo cliente.
+
         read_only_fields = ('usuario',)
 
     def validate_reserva(self, reserva):
-        """Segurança de posse (RN008): um guia só registra/edita ocorrências
-        de reservas das quais participa (responsável ou apoio). Admin pode tudo."""
+
         request = self.context.get('request')
         if request and request.user.perfil != 'admin':
             eh_responsavel = reserva.guia_responsavel_id == request.user.id
@@ -26,8 +23,21 @@ class OcorrenciaSerializer(serializers.ModelSerializer):
                 )
         return reserva
 
+    def validate(self, data):
+
+        request = self.context.get('request')
+        if self.instance and request and request.user.perfil != 'admin':
+            reserva = self.instance.reserva
+            eh_responsavel = reserva.guia_responsavel_id == request.user.id
+            eh_apoio = reserva.guias_apoio.filter(id=request.user.id).exists()
+            if not (eh_responsavel or eh_apoio):
+                raise serializers.ValidationError(
+                    'Você só pode alterar ocorrências de reservas das quais participa.'
+                )
+        return data
+
     def validate_anexo(self, arquivo):
-        """Valida o anexo quando enviado (RNF13). Sem anexo, segue normal."""
+
         if not arquivo:
             return arquivo
         nome = (arquivo.name or '').lower()

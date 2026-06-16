@@ -1,9 +1,4 @@
 import { forcaSenha } from '../utils/validacao'
-
-/**
- * Mostra a força da senha em barras coloridas + texto.
- * Responsabilidade única: apenas exibir a força de uma senha recebida por prop.
- */
 export default function MedidorSenha({ senha }) {
   if (!senha) return null
   const { nivel, texto, cor } = forcaSenha(senha)

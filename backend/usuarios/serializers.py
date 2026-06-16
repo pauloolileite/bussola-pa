@@ -24,9 +24,6 @@ class UsuarioCriacaoSerializer(serializers.ModelSerializer):
 
 
 class RegistroClienteSerializer(serializers.ModelSerializer):
-    """Auto-cadastro pela tela de login (RN001 / UC02).
-    SEGURANÇA: o perfil é SEMPRE 'cliente' — qualquer perfil enviado na
-    requisição é ignorado. Assim ninguém cria admin/guia por aqui."""
     password = serializers.CharField(write_only=True, min_length=6)
 
     class Meta:
@@ -46,11 +43,10 @@ class RegistroClienteSerializer(serializers.ModelSerializer):
     def create(self, validated_data):
         password = validated_data.pop('password')
         usuario = Usuario(**validated_data)
-        usuario.perfil = 'cliente'   # forçado, nunca vem do cliente
+        usuario.perfil = 'cliente'
         usuario.status = True
         usuario.set_password(password)
         usuario.save()
-        # Cria também o registro de Cliente vinculado (para reservas).
         Cliente.objects.create(
             nome=validated_data.get('first_name') or validated_data['username'],
             email=validated_data.get('email', ''),

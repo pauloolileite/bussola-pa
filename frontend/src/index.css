@@ -11,6 +11,5 @@
 body {
   font-family: 'Inter', sans-serif;
   background: #f6faff;
-  /* Impede que qualquer conteúdo largo empurre a página para os lados no celular */
   overflow-x: hidden;
 }

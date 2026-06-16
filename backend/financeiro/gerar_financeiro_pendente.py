@@ -1,9 +1,3 @@
-"""
-Gera o registro financeiro para reservas que JÁ estão concluídas mas
-ainda não têm financeiro (situação anterior à automação).
-
-Uso:  python manage.py gerar_financeiro_pendente
-"""
 from django.core.management.base import BaseCommand
 from reservas.models import Reserva
 from reservas.services import gerar_financeiro_da_reserva

@@ -1,24 +1,10 @@
 import { X } from 'lucide-react'
 
-/**
- * Componente isolado para selecionar guias de apoio de uma reserva (RN004 / UC05).
- *
- * Responsabilidade única (SRP): apenas gerenciar a lista de guias de apoio.
- * Recebe tudo por props (não conhece a tela de reservas), então pode ser
- * reutilizado em qualquer formulário — usado nos modais de criar e editar.
- *
- * props:
- *  - guias: lista de todos os guias disponíveis [{id, first_name, last_name, username}]
- *  - selecionados: array de ids já escolhidos
- *  - onChange: função(novaListaDeIds)
- *  - idResponsavel: id do guia responsável (fica de fora das opções de apoio)
- */
 export default function SeletorGuiasApoio({ guias, selecionados, onChange, idResponsavel }) {
   function nomeDoGuia(g) {
     return g.first_name && g.last_name ? `${g.first_name} ${g.last_name}` : g.username
   }
-
-  // O responsável não pode ser apoio de si mesmo, e quem já foi escolhido sai da lista.
+  
   const disponiveis = guias.filter(
     g => String(g.id) !== String(idResponsavel) && !selecionados.includes(String(g.id))
   )

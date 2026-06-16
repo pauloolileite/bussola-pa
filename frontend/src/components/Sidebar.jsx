@@ -44,7 +44,6 @@ export default function Sidebar() {
     navigate('/login')
   }
 
-  // O conteúdo do menu é o mesmo no desktop e no mobile (DRY).
   const conteudo = (
     <>
       <div className="px-5 py-6 border-b border-white/10 flex items-center justify-between">
@@ -56,7 +55,7 @@ export default function Sidebar() {
             {perfil}
           </span>
         </div>
-        {/* Botão de fechar — só aparece no mobile */}
+        {/* Botão de fechar — mobile */}
         <button onClick={() => setAberto(false)}
           className="md:hidden text-white/70 hover:text-white cursor-pointer" aria-label="Fechar menu">
           <X size={22} />
@@ -101,7 +100,7 @@ export default function Sidebar() {
 
   return (
     <>
-      {/* Barra superior — só no mobile. Tem o botão hambúrguer. */}
+      {/* Barra superior — mobile. */}
       <header className="md:hidden fixed top-0 left-0 right-0 h-14 z-40 flex items-center px-4 gap-3"
         style={{ background: '#000441' }}>
         <button onClick={() => setAberto(true)} className="text-white cursor-pointer" aria-label="Abrir menu">
@@ -112,16 +111,15 @@ export default function Sidebar() {
         </span>
       </header>
 
-      {/* Menu fixo — só no desktop (md pra cima) */}
+      {/* Menu fixo — desktop */}
       <aside className="hidden md:flex fixed top-0 left-0 h-screen w-56 flex-col z-30"
         style={{ background: '#000441' }}>
         {conteudo}
       </aside>
 
-      {/* Menu deslizante — só no mobile, quando aberto */}
+      {/* Menu deslizante — mobile*/}
       {aberto && (
         <>
-          {/* Fundo escuro: clicar fecha */}
           <div className="md:hidden fixed inset-0 z-40 bg-black/50" onClick={() => setAberto(false)} />
           <aside className="md:hidden fixed top-0 left-0 h-screen w-64 flex flex-col z-50"
             style={{ background: '#000441' }}>
