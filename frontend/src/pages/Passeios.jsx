@@ -30,8 +30,8 @@ const CATEGORIA_CORES = {
 function Modal({ titulo, onClose, children }) {
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center" style={{ background: 'rgba(0,0,0,0.5)' }}>
-      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-lg mx-4 overflow-hidden">
-        <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100">
+      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-lg mx-4 overflow-hidden max-h-[90vh] overflow-y-auto">
+        <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100 sticky top-0 bg-white z-10">
           <h3 className="font-bold text-lg" style={{ color: '#000441', fontFamily: 'Montserrat, sans-serif' }}>{titulo}</h3>
           <button onClick={onClose} className="w-8 h-8 rounded-lg flex items-center justify-center text-gray-400 hover:bg-gray-100 transition-colors cursor-pointer">
             <X size={18} />
@@ -51,6 +51,7 @@ export default function Passeios() {
   const [pontos, setPontos] = useState([])
   const [categoria, setCategoria] = useState('')
   const [modalPasseio, setModalPasseio] = useState(false)
+  const [passeioEditando, setPasseioEditando] = useState(null)
   const [modalPonto, setModalPonto] = useState(false)
   const [modalSolicitar, setModalSolicitar] = useState(false)
   const [passeioSolicitado, setPasseioSolicitado] = useState(null)
@@ -109,19 +110,49 @@ export default function Passeios() {
     }
   }
 
+  function abrirNovoPasseio() {
+    setPasseioEditando(null)
+    setFormPasseio({ nome: '', descricao: '', categoria: 'catamara', tipo_valor: 'fixo', valor: '', ponto_turistico: '', status: true })
+    setErro('')
+    setModalPasseio(true)
+  }
+
+  function abrirEdicaoPasseio(p) {
+    setPasseioEditando(p)
+    setFormPasseio({
+      nome: p.nome || '',
+      descricao: p.descricao || '',
+      categoria: p.categoria || 'catamara',
+      tipo_valor: p.tipo_valor || 'fixo',
+      valor: p.valor != null ? p.valor : '',
+      ponto_turistico: p.ponto_turistico || '',
+      status: p.status,
+    })
+    setErro('')
+    setModalPasseio(true)
+  }
+
   async function salvarPasseio(e) {
     e.preventDefault()
     setErro('')
     try {
       const payload = { ...formPasseio }
-      if (payload.tipo_valor === 'consultar') delete payload.valor
+      if (payload.tipo_valor === 'consultar') payload.valor = null
       if (!payload.ponto_turistico) delete payload.ponto_turistico
-      await api.post('/passeios/', payload)
+      if (passeioEditando) {
+        await api.patch(`/passeios/${passeioEditando.id}/`, payload)
+        exibirSucesso('Passeio atualizado com sucesso.')
+      } else {
+        await api.post('/passeios/', payload)
+        exibirSucesso('Passeio cadastrado com sucesso.')
+      }
       setModalPasseio(false)
-      setFormPasseio({ nome: '', descricao: '', categoria: 'catamara', tipo_valor: 'fixo', valor: '', ponto_turistico: '' })
-      exibirSucesso('Passeio cadastrado com sucesso.')
+      setPasseioEditando(null)
+      setFormPasseio({ nome: '', descricao: '', categoria: 'catamara', tipo_valor: 'fixo', valor: '', ponto_turistico: '', status: true })
       carregarDados()
-    } catch { setErro('Não foi possível cadastrar o passeio.') }
+    } catch {
+      setErro(passeioEditando ? 'Não foi possível atualizar o passeio.' : 'Não foi possível cadastrar o passeio.')
+    }
   }
 
   async function salvarPonto(e) {
@@ -146,18 +177,18 @@ export default function Passeios() {
   return (
     <LocalizationProvider dateAdapter={AdapterDayjs} adapterLocale="pt-br">
       <div className="p-4 md:p-8 max-w-6xl mx-auto">
-      <div className="flex items-center justify-between mb-6">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
         <div>
           <h2 className="text-2xl font-bold" style={{ color: '#000441', fontFamily: 'Montserrat, sans-serif' }}>
             {aba === 'passeios' ? 'Passeios Disponíveis' : 'Pontos Turísticos'}
           </h2>
           <p className="text-sm text-gray-500 mt-1">Paulo Afonso, Bahia</p>
         </div>
-        <div className="flex items-center gap-3">
+        <div className="flex flex-col sm:flex-row sm:items-center gap-3">
           {aba === 'passeios' && (
             <div className="flex items-center gap-2">
-              <Filter size={15} className="text-gray-400" />
-              <select className="px-4 py-2 border border-gray-200 rounded-lg text-sm outline-none cursor-pointer bg-white"
+              <Filter size={15} className="text-gray-400 flex-shrink-0" />
+              <select className="flex-1 sm:flex-none px-4 py-2 border border-gray-200 rounded-lg text-sm outline-none cursor-pointer bg-white"
                 value={categoria} onChange={e => setCategoria(e.target.value)}>
                 <option value="">Todas as categorias</option>
                 {Object.entries(CATEGORIA_LABELS).map(([v, l]) => <option key={v} value={v}>{l}</option>)}
@@ -166,8 +197,8 @@ export default function Passeios() {
           )}
           {isAdmin && (
             <button
-              onClick={() => aba === 'passeios' ? setModalPasseio(true) : setModalPonto(true)}
-              className="flex items-center gap-2 px-4 py-2 rounded-lg text-white text-sm font-semibold transition-all active:scale-95 hover:opacity-90 cursor-pointer"
+              onClick={() => aba === 'passeios' ? abrirNovoPasseio() : setModalPonto(true)}
+              className="flex items-center justify-center gap-2 px-4 py-2 rounded-lg text-white text-sm font-semibold transition-all active:scale-95 hover:opacity-90 cursor-pointer"
               style={{ background: '#a53c00' }}
             >
               <Plus size={16} />
@@ -180,13 +211,13 @@ export default function Passeios() {
       {sucesso && <p className="text-sm text-green-700 bg-green-50 px-4 py-3 rounded-lg mb-4">{sucesso}</p>}
       {erro && <p className="text-sm text-red-600 bg-red-50 px-4 py-3 rounded-lg mb-4">{erro}</p>}
 
-      <div className="flex border-b border-gray-200 mb-6">
+      <div className="flex border-b border-gray-200 mb-6 overflow-x-auto">
         {[
           { key: 'passeios', label: 'Passeios', icone: Compass },
           { key: 'pontos', label: 'Pontos Turísticos', icone: MapPin },
         ].map(({ key, label, icone: Icone }) => (
           <button key={key} onClick={() => setAba(key)}
-            className="flex items-center gap-2 px-5 py-3 text-sm font-medium border-b-2 transition-colors cursor-pointer"
+            className="flex items-center gap-2 px-5 py-3 text-sm font-medium border-b-2 transition-colors cursor-pointer whitespace-nowrap flex-shrink-0"
             style={{ borderColor: aba === key ? '#a53c00' : 'transparent', color: aba === key ? '#a53c00' : '#9ca3af' }}>
             <Icone size={15} />{label}
           </button>
@@ -196,9 +227,17 @@ export default function Passeios() {
       {aba === 'passeios' && (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
           {passeios.map(p => (
-            <div key={p.id} className="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden hover:shadow-md transition-shadow">
-              <div className="h-36 flex items-center justify-center" style={{ background: 'linear-gradient(135deg, #000441, #1a2a6c)' }}>
+            <div key={p.id}
+              onClick={isAdmin ? () => abrirEdicaoPasseio(p) : undefined}
+              className={`bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden hover:shadow-md transition-shadow ${isAdmin ? 'cursor-pointer' : ''}`}>
+              <div className="h-36 flex items-center justify-center relative" style={{ background: 'linear-gradient(135deg, #000441, #1a2a6c)' }}>
                 <Compass size={40} className="text-white/40" />
+                {isAdmin && !p.status && (
+                  <span className="absolute top-2 right-2 text-xs font-semibold px-2 py-0.5 rounded-full bg-gray-800/80 text-white">Inativo</span>
+                )}
+                {isAdmin && (
+                  <span className="absolute bottom-2 right-2 text-xs px-2 py-0.5 rounded-full bg-white/90 text-gray-600">Editar</span>
+                )}
               </div>
               <div className="p-4">
                 <div className="flex items-center justify-between mb-2">
@@ -210,10 +249,10 @@ export default function Passeios() {
                   </span>
                 </div>
                 <h3 className="font-semibold text-base mb-1" style={{ color: '#000441' }}>{p.nome}</h3>
-                <p className="text-sm text-gray-500 leading-relaxed line-clamp-2 mb-3">{p.descricao}</p>
+                <p className="text-sm text-gray-500 leading-relaxed mb-3" style={{ display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>{p.descricao}</p>
                 {p.ponto_turistico_nome && <p className="text-xs text-gray-400 mb-3">📍 {p.ponto_turistico_nome}</p>}
                 {isCliente && (
-                  <button onClick={() => abrirSolicitacao(p)}
+                  <button onClick={(e) => { e.stopPropagation(); abrirSolicitacao(p) }}
                     className="w-full py-2 rounded-lg text-white text-sm font-semibold transition-all active:scale-95 hover:opacity-90 cursor-pointer" style={{ background: '#a53c00' }}>
                     Solicitar Passeio
                   </button>
@@ -244,7 +283,7 @@ export default function Passeios() {
                     {p.status ? 'Ativo' : 'Inativo'}
                   </span>
                 </div>
-                {p.descricao && <p className="text-sm text-gray-500 line-clamp-2 mb-2">{p.descricao}</p>}
+                {p.descricao && <p className="text-sm text-gray-500 mb-2" style={{ display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>{p.descricao}</p>}
                 {p.localizacao && <p className="text-xs text-gray-400 mb-3">📍 {p.localizacao}</p>}
                 {isAdmin && (
                   <button onClick={() => togglePonto(p.id, p.status)}
@@ -266,7 +305,7 @@ export default function Passeios() {
       )}
 
       {modalPasseio && (
-        <Modal titulo="Novo Passeio" onClose={() => { setModalPasseio(false); setErro('') }}>
+        <Modal titulo={passeioEditando ? 'Editar Passeio' : 'Novo Passeio'} onClose={() => { setModalPasseio(false); setPasseioEditando(null); setErro('') }}>
           <form onSubmit={salvarPasseio} className="space-y-4">
             <div>
               <label className="block text-sm font-medium mb-1.5 text-gray-600">Nome</label>
@@ -314,6 +353,21 @@ export default function Passeios() {
                 {pontos.map(p => <option key={p.id} value={p.id}>{p.nome}</option>)}
               </select>
             </div>
+            {passeioEditando && (
+              <div className="flex items-center justify-between border border-gray-200 rounded-lg px-4 py-3">
+                <div>
+                  <p className="text-sm font-medium text-gray-700">Passeio disponível</p>
+                  <p className="text-xs text-gray-400">Desative para ocultar das solicitações</p>
+                </div>
+                <button type="button"
+                  onClick={() => setFormPasseio({ ...formPasseio, status: !formPasseio.status })}
+                  className="relative w-12 h-6 rounded-full transition-colors cursor-pointer flex-shrink-0"
+                  style={{ background: formPasseio.status ? '#16a34a' : '#d1d5db' }}>
+                  <span className="absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full transition-transform"
+                    style={{ transform: formPasseio.status ? 'translateX(24px)' : 'translateX(0)' }} />
+                </button>
+              </div>
+            )}
             {erro && <p className="text-sm text-red-600 bg-red-50 px-3 py-2 rounded-lg">{erro}</p>}
             <div className="flex gap-3 pt-2">
               <button type="submit" className="flex-1 py-2.5 rounded-lg text-white text-sm font-semibold transition-all active:scale-95 hover:opacity-90 cursor-pointer" style={{ background: '#a53c00' }}>Salvar</button>

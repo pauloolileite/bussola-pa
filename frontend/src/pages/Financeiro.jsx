@@ -55,10 +55,10 @@ export default function Financeiro() {
       <div className="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden">
         <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100">
           <h3 className="font-semibold text-base" style={{ color: '#000441' }}>Histórico de Ganhos</h3>
-          <button className="flex items-center gap-2 text-sm text-gray-500 hover:text-gray-700 transition-colors cursor-pointer active:scale-95">
+          {/*<button className="flex items-center gap-2 text-sm text-gray-500 hover:text-gray-700 transition-colors cursor-pointer active:scale-95">
             <Download size={14} />
             Exportar
-          </button>
+          </button>*/}
         </div>
         {/* MOBILE: cartões */}
         <div className="md:hidden p-4 space-y-3">
@@ -107,7 +107,7 @@ export default function Financeiro() {
                   </span>
                 </td>
                 <td className="px-6 py-4">
-                  <button className="text-xs font-medium underline cursor-pointer hover:opacity-70 transition-opacity" style={{ color: '#000441' }}>
+                  <button className="text-xs font-medium underline cursor-pointer hover:opacity-70 transition-opacity" style={{ color: '#ffffffff' }}>
                     Ver Recibo
                   </button>
                 </td>

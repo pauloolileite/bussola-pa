@@ -14,7 +14,6 @@ import MinhasReservas from './pages/MinhasReservas'
 import { lerSessao } from './hooks/useAuth'
 import AssistenteIA from './components/AssistenteIA'
 
-// Tela inicial de cada perfil.
 const HOME_POR_PERFIL = {
   admin: '/dashboard',
   guia: '/reservas',
@@ -64,7 +63,7 @@ export default function App() {
           {/* Passeios */}
           <Route path="/passeios" element={<RotaProtegida><Passeios /></RotaProtegida>} />
 
-          {/* Parceiro operacional (e admin para conferência) */}
+          {/* Parceiro operacional */}
           <Route path="/validacao" element={<RotaProtegida perfis={['admin', 'parceiro']}><Validacao /></RotaProtegida>} />
 
           {/* Qualquer outra rota */}
@@ -75,7 +74,6 @@ export default function App() {
   )
 }
 
-// Redireciona para a tela certa conforme o perfil.
 function RedirecionarInicio() {
   const sessao = lerSessao()
   if (!sessao) return <Navigate to="/login" replace />
